@@ -1,36 +1,35 @@
-params.f1 = ''
-params.f2 = ''
-params.o = ''
+params.f1 = ""
+params.f2 = ""
+params.o = ""
 params.r = 0
+params.b = ""
+params.sz = 1.6
+params.i = 10
+params.d = ""
+params.v = ""
+params.lm = ""
 
-params.str = 'Hello World'
+b_arg = params.b == "" ? "" : "-b $params.b "
+sz_arg = params.sz == 1.6 ? "" : "-sz $params.sz "
+i_arg = params.i == 10 ? "" : "-i $params.i "
+d_arg = params.d == "" ? "" : "-d $params.d "
+v_arg = params.v == "" ? "" : "-v $params.v "
+lm_arg = params.lm == "" ? "" : "-lm $params.lm "
 
-process splitLetters {
+contact_map_one = Channel.fromPath( params.f1 )
+contact_map_two = Channel.fromPath( params.f2 )
 
-    output:
-    file 'chunk_*' into letters mode flatten
+process blastThemAll {
+  input:
+  file cm1 from contact_map_one
+  file cm2 from contact_map_two
+  output:
+  file 'selfish.npy'
+  stdout res
 
-    script:
-    if (params.f1 != '' && params.f2 != '' && params.o != '' && params.r != 0)
-        """
-        printf '${params.str}' | split -b 6 - chunk_
-        """
-    else
-        error "Invalid arguments. The arguments --f1, --f2, --o, --r are required."
+  """
+    /selfish/selfish/selfish.py -f1 $cm1 -f2 $cm2 -o ./ -r $params.r $b_arg$sz_arg$i_arg$d_arg$v_arg$lm_arg
+  """
+
 }
-
-
-process convertToUpper {
-
-    input:
-    file x from letters
-
-    output:
-    stdout result
-
-    """
-    cat $x | tr '[a-z]' '[A-Z]'
-    """
-}
-
-result.println { it.trim() }
+res.println {it}

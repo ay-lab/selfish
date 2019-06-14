@@ -168,10 +168,6 @@ def DCI(f1,
 
     dt = np.float32 if low_memory else np.float64
 
-    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
-                             key=lambda x: -x[1])[:10]:
-        print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
-
     biasDict = read_bias(bias)
 
     if type(f1) == str and type(f2) == str:
@@ -194,9 +190,6 @@ def DCI(f1,
         print("Error: inputs should either be file names or square numpy matrices")
         return
     if verbose: print("Applying distance filter")
-    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
-                             key=lambda x: -x[1])[:10]:
-        print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
     if distance_filter > 0:
         a = np.tril(a, distance_filter // res)
         b = np.tril(b, distance_filter // res)
@@ -225,9 +218,6 @@ def DCI(f1,
 
     if verbose: print("Diagonal Normalizing Map 2")
     normalize_map(b, b != 0)
-    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
-                             key=lambda x: -x[1])[:10]:
-        print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
     if plot_results:
         plt.clf()
         sns.heatmap(np.abs(a))
@@ -254,9 +244,6 @@ def DCI(f1,
     #a = None
     diff = b.copy()
     #b = None
-    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
-                             key=lambda x: -x[1])[:10]:
-        print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
     d_pre = gaussian_filter(diff, scales[0])
     count = 1
     for scale in scales[1:]:
@@ -270,9 +257,6 @@ def DCI(f1,
         final_p[p_vals < final_p] = p_vals[p_vals < final_p]
         d_pre = d_post.copy()
         count += 1
-        for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
-                                 key=lambda x: -x[1])[:10]:
-            print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
 
     d_diff = None
     o = np.ones(diff.shape, dtype=dt)
@@ -281,9 +265,6 @@ def DCI(f1,
 
     o[non_zero_indices] = out_p
     o[o == 0] = 1
-    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
-                             key=lambda x: -x[1])[:10]:
-        print("{:>30}: {:>8}".format(name, sizeof_fmt(size)))
     if plot_results:
         plt.clf()
         sns.heatmap(np.abs(np.log2(o)))
