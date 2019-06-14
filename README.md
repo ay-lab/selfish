@@ -5,23 +5,21 @@ in a robust way. For more information read the full
 paper: <a href="https://www.biorxiv.org/content/10.1101/540708v1?rss=1" target="_blank">**Selfish: Discovery of Differential Chromatin Interactions via a Self-Similarity Measure**</a>. 
 
 ## Installation and usage
-### PIP
-Pip install isn't currently available.
 ### Github
 Make sure you have python 3 installed, along with all the dependencies listed.
 ```bash
 git clone https://github.com/tuvangezer/selfish
 ./selfish/selfish/selfish.py -f1 /.../map1.txt \
                              -f2 /.../map2.txt \
-                             -r 100kb \
-                             -o ./
+                             -r 100kb -o ./
 ```
 ### Nextflow
-If you have any problem regarding dependancies or version mismatches, we recommend using Nextflow<a href="https://www.nextflow.io/" target="_blank">Nextflow</a> with a container technology like <a href="https://www.docker.com/get-started" target="_blank">Docker</a> or <a href="https://singularity.lbl.gov/" target="_blank">Singularity</a>. These methods require Nextflow(Can be installed with a single command that doesn't require special permissions.), and the desired container technology to be available.
-Program arguments are given to nextflow with two dashes and the short format listed below. **Updating:** If nextflow warns that your project is outdated, use `nextflow pull tuvangezer/selfish`
+If you have any problem regarding dependancies or version mismatches, we recommend using <a href="https://www.nextflow.io/" target="_blank">Nextflow</a> with a container technology like <a href="https://www.docker.com/get-started" target="_blank">Docker</a> or <a href="https://singularity.lbl.gov/" target="_blank">Singularity</a>. These methods require Nextflow(Can be installed with a single command that doesn't require special permissions.), and the desired container technology to be available.
+Program arguments are given to nextflow with two dashes and the short format listed below.   
+**Updating:** If Nextflow warns that your project is outdated, use `nextflow pull tuvangezer/selfish` in order to update to latest version.
 #### With Docker
 ```bash
-nextflow run tuvangezer/selfish --f1="/.../map1.txt"\
+nextflow run tuvangezer/selfish --f1="/.../map1.txt" \
                                 --f2="/.../map2.txt" \
                                 --r=100kb -profile docker
 ```
@@ -39,6 +37,8 @@ nextflow run tuvangezer/selfish --f1="/.../map1.txt" \
 ```
 ### Bioconda
 Bioconda install isn't currently available.
+### PIP
+Pip install isn't currently available.
 ### Dependencies
 Selfish uses some python packages to accomplish its mission. These are the packages used by selfish:
 1. numpy
