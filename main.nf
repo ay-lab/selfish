@@ -1,6 +1,5 @@
 params.f1 = ""
 params.f2 = ""
-params.o = ""
 params.r = 0
 params.b = ""
 params.sz = 1.6
@@ -19,7 +18,7 @@ lm_arg = params.lm == "" ? "" : "-lm $params.lm "
 contact_map_one = Channel.fromPath( params.f1 )
 contact_map_two = Channel.fromPath( params.f2 )
 
-process blastThemAll {
+process run_selfish {
   input:
   file cm1 from contact_map_one
   file cm2 from contact_map_two
