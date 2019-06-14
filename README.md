@@ -8,7 +8,19 @@ paper: <a href="https://www.biorxiv.org/content/10.1101/540708v1?rss=1" target="
 #### TODO
 
 ## Usage
+### PIP
+Pip install isn't currently available.
 `$ selfish -f1 NPC_chr4_100kb.txt -f2 ES_chr4_100kb.txt -o ./ -r 100kb -b normals.KRNorm` 
+### Github
+### Nextflow
+If you have any problem regarding dependancies or version mismatches, we recommend using Nextflow<a href="https://www.nextflow.io/" target="_blank">Nextflow</a> with a container technology like <a href="https://www.docker.com/get-started" target="_blank">Docker</a> or <a href="https://singularity.lbl.gov/" target="_blank">Singularity</a>. These methods require Nextflow(Can be installed with a single command that doesn't require special permissions.), and the desired container technology to be available.
+Program arguments are given to nextflow with two dashes and the short format listed below.
+#### With Docker
+`nextflow run tuvangezer/selfish -with-docker tuvan/selfish --f1="/.../NPC_chr4_100kb.observed.txt" --f2="/.../ES_chr4_100kb.observed.txt" --r=100kb`
+#### With Singularity
+
+### Bioconda
+Bioconda install isn't currently available.
 
 ## Parameters
 | Short | Long | Meaning |
