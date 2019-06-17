@@ -136,7 +136,6 @@ def get_sep(f):
             elif "," in line:
                 return ','
             break
-    print(line)
     raise FileNotFoundError
 
 

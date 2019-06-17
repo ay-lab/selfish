@@ -29,12 +29,6 @@ nextflow run tuvangezer/selfish --f1="/.../map1.txt" \
                                 --f2="/.../map2.txt" \
                                 --r=100kb -profile singularity
 ```
-#### Locally
-```bash
-nextflow run tuvangezer/selfish --f1="/.../map1.txt" \
-                                --f2="/.../map2.txt" \
-                                --r=100kb -profile local
-```
 ### Bioconda
 Bioconda install isn't currently available.
 ### PIP
