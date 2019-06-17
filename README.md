@@ -6,7 +6,7 @@ paper: <a href="https://www.biorxiv.org/content/10.1101/540708v1?rss=1" target="
 
 ## Installation and usage
 ### Github
-Make sure you have python 3 installed, along with all the dependencies listed.
+Make sure you have Python 3 installed, along with all the dependencies listed.
 ```bash
 git clone https://github.com/tuvangezer/selfish
 ./selfish/selfish/selfish.py -f1 /.../map1.txt \
@@ -28,15 +28,15 @@ curl -s https://get.nextflow.io | bash
 #### With Docker
 ```bash
 ./nextflow run tuvangezer/selfish --f1="/.../map1.txt" \
-                                --f2="/.../map2.txt" \
-                                --r=100kb -profile docker
+                                  --f2="/.../map2.txt" \
+                                  --r=100kb -profile docker
 ```
 
 #### With Singularity
 ```bash
 ./nextflow run tuvangezer/selfish --f1="/.../map1.txt" \
-                                --f2="/.../map2.txt" \
-                                --r=100kb -profile singularity
+                                  --f2="/.../map2.txt" \
+                                  --r=100kb -profile singularity
 ```
 
 ### Bioconda
