@@ -3,6 +3,7 @@ import argparse
 import os
 import pathlib
 import sys
+import re
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
@@ -63,6 +64,9 @@ def parse_args(args):
     parser.add_argument("-lm", "--lowmem", dest="lowmemory",
                         help="OPTIONAL: Uses Float32 instead of Float64, halves the memory usage. Default is False",
                         default=False, required=False)
+    parser.add_argument("-ch", "--chromosome", dest="chromosome",
+                        help="REQUIRED for BED/Matrix input. Specify which chromosome to run the program for.",
+                        default=0, required=False)
 
     parser.add_argument("-V", "--version", action="version", version="Selfish {}".format(__version__) \
                         , help="Print version and exit")
@@ -148,7 +152,7 @@ def read_bias(f):
                 line = line.strip().split(sep)
                 val = float(line[1])
                 if not np.isnan(val):
-                    d[line[0]] = val
+                    d[int(float(line[0]))] = val
         return d
     else:
         return False
@@ -163,6 +167,7 @@ def DCI(f1,
         verbose=True,
         distance_filter=5000000,
         bias=False,
+        chromosome=0,
         low_memory=False):
     scales = [(2 * (2 * (sigma0 * (2 ** (i / s)))) + 1) for i in range(s + 2)]
 
@@ -172,11 +177,17 @@ def DCI(f1,
 
     if type(f1) == str and type(f2) == str:
         if verbose: print("Reading Contact Map 1")
-
-        a = read_map_pd(f1, res, biasDict, dt)
+        if "bed" not in f1 and "matrix" not in f1:
+            a = read_map_pd(f1, res, biasDict, dt)
+        else:
+            a = readBEDMAT(f1, res, chromosome, bias)
 
         if verbose: print("Reading Contact Map 2")
-        b = read_map_pd(f2, res, biasDict, dt)
+        if "bed" not in f2 and "matrix" not in f2:
+            b = read_map_pd(f2, res, biasDict, dt)
+        else:
+            b = readBEDMAT(f2, res, chromosome, bias)
+
         f1 = f1.split('.')[0] if '.' in f1 else f1
         f2 = f2.split('.')[0] if '.' in f2 else f2
     elif type(f1) == np.ndarray and type(f2) == np.ndarray \
@@ -277,6 +288,39 @@ def sorted_indices(dci_out):
     ind = np.unravel_index(np.argsort(dci_out, axis=None), dci_out.shape)
     return ind[0], ind[1]
 
+def toNearest(n,res):
+    if n % res == 0:
+        return n
+    return (n//res + 1) * res
+def isChr(s, c):
+    return str(c) in re.findall("[1-9][0-9]*", s)
+
+def readBEDMAT(f,res, chr, bias):
+    bed = f if ".bed" in f else f.replace("matrix", "bed")
+    mat = f if ".matrix" in f else f.replace("bed", "matrix")
+    if ".bed" != bed[-4:] or ".matrix" != mat[-7:]:
+        print("Error: Couldn't find matrix-bed combinations. They must have same names, only difference being extension. (.bed, .matrix)")
+        raise FileNotFoundError
+    d = {}
+    with open(bed) as bf:
+        for line in bf:
+            l = line.strip().split('\t')
+            if isChr(l[0], chr):
+                d[int(l[3])] = toNearest(int(l[2]), res) // res
+    n = max(d.values()) + 1
+    o = np.zeros((n,n))
+    with open(mat) as mf:
+        for line in mf:
+            l = line.strip().split('\t')
+            if int(l[0]) in d and int(l[1]) in d:
+                val = float(l[2])
+                if bias:
+                    val *= bias.get(int(l[1]), 1)
+                    val *= bias.get(int(l[0]), 1)
+                o[d[int(l[0])], d[int(l[1])]] = val
+                o[d[int(l[1])], d[int(l[0])]] = val
+    return o
+
 
 def parseBP(s):
     if not s:
@@ -330,7 +374,8 @@ def main():
             distance_filter=distFilter,
             plot_results=args.plot,
             bias=biasf,
-            low_memory=args.lowmemory)
+            low_memory=args.lowmemory,
+            chromosome=args.chromosome)
 
     np.save(str(pathlib.Path(args.outdir).joinpath("selfish.npy")), o)
 
