@@ -10,7 +10,7 @@ setup(
     name = "selfish_hic",
     version =__version__,
     description = 'Hi-C Differential Analysis software created and maintained by the Ay Lab',
-    long_description = "SELFISH is a tool for finding differential chromatin interactions between two Hi-C contact maps. It uses self-similarity to model interactions in a robust way.",
+    long_description = "SELFISH is a tool for finding differential chromatin interactions between two Hi-C contact maps. It uses self-similarity to model interactions in a robust way. You can read the paper for more information.",
     url = 'http://github.com/ay-lab/selfish/',
     entry_points = {
         "console_scripts": ['selfish = selfish.selfish:main']
@@ -19,7 +19,7 @@ setup(
     author = 'Ferhat Ay',
     author_email = 'ferhatay@lji.org',
     license = 'MIT',
-    packages = ['selfish_hic'],
+    packages = ['selfish'],
     install_requires = [
         'numpy',
         'matplotlib',

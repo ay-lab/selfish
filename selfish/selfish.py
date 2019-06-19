@@ -281,7 +281,7 @@ def DCI(f1,
         sns.heatmap(np.abs(np.log2(o)))
         plt.title("Differential analysis")
         plt.savefig(f1 + "_" + f2 + "_selfish.png")
-    return a,b,o
+    return o
 
 
 def sorted_indices(dci_out):

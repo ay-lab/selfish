@@ -1,10 +1,18 @@
 # SELFISH
-SELFISH (Discovery of Differential Chromatin Interactions via a Self-Similarity Measure) is a tool for finding differential chromatin interactions
+SELFISH (Discovery of Differential Chromatin Interactions via a Self-Similarity Measure) is a tool by Abbas Roayaei Ardakany, Ferhat Ay, and Stefano Lonardi. It is currently maintained by Tuvan Gezer (hgezer@lji.org).  
+SELFISH is a tool for finding differential chromatin interactions
 between two Hi-C contact maps. It uses self-similarity to model interactions 
 in a robust way. For more information read the full 
 paper: <a href="https://www.biorxiv.org/content/10.1101/540708v1?rss=1" target="_blank">**Selfish: Discovery of Differential Chromatin Interactions via a Self-Similarity Measure**</a>. 
 
 ## Installation and usage
+### PIP
+```bash
+pip install selfish-hic
+selfish -f1 /.../map1.txt \
+        -f2 /.../map2.txt \
+        -r 100kb -o ./
+```
 ### Github
 Make sure you have Python 3 installed, along with all the dependencies listed.
 ```bash
@@ -14,8 +22,8 @@ git clone https://github.com/tuvangezer/selfish
                              -r 100kb -o ./
 ```
 ### Nextflow
-If you have any problem regarding dependancies or version mismatches, we recommend using <a href="https://www.nextflow.io/" target="_blank">Nextflow</a> with a container technology like <a href="https://www.docker.com/get-started" target="_blank">Docker</a> or <a href="https://singularity.lbl.gov/" target="_blank">Singularity</a>. These methods require Nextflow(Can be installed with a single command that doesn't require special permissions.), and the desired container technology to be available.
-Program arguments are given to nextflow with two dashes and the short format listed below.   
+If you have any problem regarding dependencies or version mismatches, we recommend using <a href="https://www.nextflow.io/" target="_blank">Nextflow</a> with a container technology like <a href="https://www.docker.com/get-started" target="_blank">Docker</a> or <a href="https://singularity.lbl.gov/" target="_blank">Singularity</a>. These methods require Nextflow(Can be installed with a single command that doesn't require special permissions.), and the desired container technology to be available.
+Program arguments are given to Nextflow with two dashes and the short format listed below.   
 **Updating:** If Nextflow warns that your project is outdated, use `nextflow pull tuvangezer/selfish` in order to update to latest version.
 #### Install Nextflow
 Nextflow works for Linux and OS X. Install it using **one** of the commands listed below. **Requires Java 8+**
@@ -41,8 +49,6 @@ curl -s https://get.nextflow.io | bash
 
 ### Bioconda
 Bioconda install isn't currently available.
-### PIP
-Pip install isn't currently available.
 ### Dependencies
 Selfish uses some python packages to accomplish its mission. These are the packages used by selfish:
 1. numpy
