@@ -76,7 +76,8 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | **-V** | **--version** | Shows the version of the tool. |
 
 ### Input Formats
-#### Contact Maps
+SELFISH supports 3 different input formats. **Plain text**, **.hic**, **.bed/.matrix** combinations.
+#### Text Contact Maps
 Contact maps need to have the following format. They must not have a header. 
 Values must be separated by either a space, a tab, or a comma.
 Midpoints must either be all divisible to resolution, or be already divided. (ie. if the resolution is 5.000, midpoint can be 10 or 50.000)
@@ -86,6 +87,16 @@ Midpoints must either be all divisible to resolution, or be already divided. (ie
 | 5000 | 65000 | 438 |
 | 5000 | 85000 | 12 |
 | ... | ... | ... |
+
+
+#### Bed-Matrix Combined files
+**Must provide a chromosome with the -ch argument.**
+.bed and .matrix files must have the same name other than the extension.
+ Either file name can be provided as an input for selfish and the program will search for the second file automatically.
+ 
+ 
+#### HiC file
+Selfish uses juicer's *straw* tool to read .hic files. User must provide a specific chromosome with the -ch argument.
 
 #### Bias File
 Bias file need to have the following format.
