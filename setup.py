@@ -1,4 +1,5 @@
-
+# python3 setup.py sdist bdist_wheel
+# python3 -m twine upload dist/*
 from setuptools import setup
 from setuptools import find_packages
 
@@ -23,10 +24,12 @@ setup(
     install_requires = [
         'numpy',
         'matplotlib',
+        'requests',
         'scipy',
         'pandas',
         'seaborn',
-        'statsmodels'
+        'statsmodels',
+        'hic-straw'
     ],
     classifiers=(
         "Programming Language :: Python :: 3",

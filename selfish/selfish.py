@@ -7,6 +7,7 @@ import re
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
+import straw
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -177,16 +178,32 @@ def DCI(f1,
 
     if type(f1) == str and type(f2) == str:
         if verbose: print("Reading Contact Map 1")
-        if "bed" not in f1 and "matrix" not in f1:
-            a = read_map_pd(f1, res, biasDict, dt)
-        else:
+        if ("bed" in f1) or ("matrix" in f1):
+            if chromosome == 0:
+                print("You need to specify a chromosome for matrix files.")
+                raise FileNotFoundError
             a = readBEDMAT(f1, res, chromosome, bias)
+        elif ".hic" in f1:
+            if chromosome == 0:
+                print("You need to specify a chromosome for hic files.")
+                raise FileNotFoundError
+            a = readHiCFile(f1, chromosome, res)
+        else:
+            a = read_map_pd(f1, res, biasDict, dt)
 
         if verbose: print("Reading Contact Map 2")
-        if "bed" not in f2 and "matrix" not in f2:
-            b = read_map_pd(f2, res, biasDict, dt)
-        else:
+        if ("bed" in f2) or ("matrix" in f2):
+            if chromosome == 0:
+                print("You need to specify a chromosome for matrix files.")
+                raise FileNotFoundError
             b = readBEDMAT(f2, res, chromosome, bias)
+        elif ".hic" in f2:
+            if chromosome == 0:
+                print("You need to specify a chromosome for hic files.")
+                raise FileNotFoundError
+            b = readHiCFile(f1, chromosome, res)
+        else:
+            b = read_map_pd(f2, res, biasDict, dt)
 
         f1 = f1.split('.')[0] if '.' in f1 else f1
         f2 = f2.split('.')[0] if '.' in f2 else f2
@@ -205,21 +222,30 @@ def DCI(f1,
         a = np.tril(a, distance_filter // res)
         b = np.tril(b, distance_filter // res)
 
+    tmp_n = max(max(a.shape), max(b.shape))
+    tmp = np.zeros((tmp_n,tmp_n))
+    tmp[:a.shape[0],:a.shape[1]] = a
+    a = tmp.copy()
+    tmp = np.zeros((tmp_n,tmp_n))
+    tmp[:b.shape[0], :b.shape[1]] = b
+    b = tmp.copy()
+    tmp = None
+
     non_zero_indices = np.logical_and(a != 0, b != 0)
 
     if plot_results:
         plt.clf()
         p_f = a.copy()
         p_f[p_f == 0] = 1
-        sns.heatmap(np.abs(np.log(p_f)))
+        sns.heatmap(np.abs(np.log10(p_f)))
         plt.title("Contact counts (KR normalised, log scale) " + f1)
-        plt.savefig(f1 + "_" + f2 + '_1_kr.png')
+        plt.savefig('f1_1_kr.png')
         plt.clf()
         p_f = b.copy()
         p_f[p_f == 0] = 1
         sns.heatmap(np.log(p_f))
         plt.title("Contact counts (KR normalised, log scale) " + f2)
-        plt.savefig(f1 + "_" + f2 + '_2_kr.png')
+        plt.savefig('f2_2_kr.png')
 
     # np.save("kr_a.dat",a)
     # np.save("kr_b.dat",b)
@@ -233,16 +259,16 @@ def DCI(f1,
         plt.clf()
         sns.heatmap(np.abs(a))
         plt.title("Contact counts (Diagonal normalised) " + f1)
-        plt.savefig(f1 + "_" + f2 + '_1_diag.png')
+        plt.savefig('f1_1_diag.png')
         plt.clf()
         sns.heatmap(np.abs(b))
         plt.title("Contact counts (Diagonal normalised) " + f2)
-        plt.savefig(f1 + "_" + f2 + '_2_diag.png')
+        plt.savefig('f2_2_diag.png')
 
         plt.clf()
         sns.heatmap(np.abs(np.abs(a) - np.abs(b)))
         plt.title("Contact difference (Diagonal normalised")
-        plt.savefig(f1 + "_" + f2 + '_diff_diag.png')
+        plt.savefig('f12_diff_diag.png')
 
     # np.save("diag_a.dat",a)
     # np.save("diag_b.dat",b)
@@ -278,9 +304,9 @@ def DCI(f1,
     o[o == 0] = 1
     if plot_results:
         plt.clf()
-        sns.heatmap(np.abs(np.log2(o)))
+        sns.heatmap(np.abs(np.log10(o)))
         plt.title("Differential analysis")
-        plt.savefig(f1 + "_" + f2 + "_selfish.png")
+        plt.savefig("f1f2_selfish.png")
     return o
 
 
@@ -293,7 +319,23 @@ def toNearest(n,res):
         return n
     return (n//res + 1) * res
 def isChr(s, c):
+    if 'X' == c:
+        return 'X' in c
+    if 'Y' == c:
+        return 'Y' in c
     return str(c) in re.findall("[1-9][0-9]*", s)
+
+def readHiCFile(f,chr, res):
+    result = straw.straw('KR', f, str(chr), str(chr), 'BP', res)
+    x = np.array(result[0]) // res
+    y = np.array(result[1]) // res
+    val = np.array(result[2])
+    n = max(max(x), max(y))
+    o = np.zeros((n,n)) + 1
+    o[x,y] = val
+    o[y,x] = val
+    return o
+
 
 def readBEDMAT(f,res, chr, bias):
     bed = f if ".bed" in f else f.replace("matrix", "bed")
