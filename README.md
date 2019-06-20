@@ -4,7 +4,7 @@ SELFISH is a tool for finding differential chromatin interactions
 between two Hi-C contact maps. It uses self-similarity to model interactions 
 in a robust way. For more information read the full 
 paper: <a href="https://www.biorxiv.org/content/10.1101/540708v1?rss=1" target="_blank">**Selfish: Discovery of Differential Chromatin Interactions via a Self-Similarity Measure**</a>. 
-
+![DCI](/demo.png)
 ## Installation and usage
 ### PIP
 ```bash
