@@ -57,6 +57,7 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 4. seaborn
 5. scipy
 6. statsmodels
+7. hic-straw
 
 ## Parameters
 | Short | Long | Meaning |
