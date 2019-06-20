@@ -15,11 +15,12 @@ import statsmodels.stats.multitest as smm
 from scipy.ndimage import gaussian_filter
 from scipy.stats import norm
 
+# Read the version file and get the value.
 dir = os.path.dirname(__file__)
 version_py = os.path.join(dir, "_version.py")
 exec(open(version_py).read())
 
-
+# Set the arguments required for the program.
 def parse_args(args):
     parser = argparse.ArgumentParser(description="Check the help flag")
 
@@ -76,6 +77,13 @@ def parse_args(args):
 
 
 def read_map_pd(path, res, bias, dt):
+    """
+    :param path: File path for the contact map
+    :param res: Resolution of the contact map
+    :param bias: Bias dictionary to multiply the values
+    :param dt: Data type to use as the matrix, np.float64 OR np.float32
+    :return: A square matrix with contact counts as values.
+    """
     sep = get_sep(path)
     o = pd.read_csv(path, sep=sep, header=None)
     o.dropna(inplace=True)
@@ -97,8 +105,8 @@ def read_map_pd(path, res, bias, dt):
 
 def get_diags(map):
     """
-    Calculates the mean and standard deviation for every
-    diagonal of a contact map
+    :param map: Contact map, numpy matrix
+    :return: 2 Dictionaries where keys are the diagonal number and values are the mean of that diagonal in one dictionary and the std. in the other dictionary.
     """
     means = {}
     stds = {}
@@ -120,7 +128,7 @@ def normalize_map(map, non_zero):
     """
     :param map: contact map
     :param non_zero: same size matrix with map that has True as value for indices to be normalized.
-    :return: Changes matrix in place to have diagonals = 0
+    :return: Changes matrix in place to have each diagonal sum = 0
     """
     means, stds = get_diags(map)
     x, y = np.nonzero(non_zero)
@@ -132,6 +140,10 @@ def normalize_map(map, non_zero):
 
 
 def get_sep(f):
+    """
+    :param f: file path
+    :return: Guesses the value separator in the file.
+    """
     with open(f) as file:
         for line in file:
             if "\t" in line:
@@ -145,6 +157,10 @@ def get_sep(f):
 
 
 def read_bias(f):
+    """
+    :param f: Path to the bias file
+    :return: Dictionary where keys are the bin coordinates and values are the bias value to multiply them with.
+    """
     d = defaultdict(lambda: 1.0)
     if f:
         sep = get_sep(f)
@@ -170,6 +186,20 @@ def DCI(f1,
         bias=False,
         chromosome=0,
         low_memory=False):
+    """
+    :param f1: Path to contact map 1
+    :param f2: Path to contact map 2
+    :param res: Resolution of the contact maps
+    :param sigma0: Sigma0 parameter of the SELFISH method
+    :param s: Iteration count parameter of the SELFISH method
+    :param plot_results: Boolean parameter to draw plots of the files
+    :param verbose: Boolean parameter to make program print information during execution
+    :param distance_filter: Distance where interactions that are further would be discarded
+    :param bias: Path to a bias file
+    :param chromosome: Chromosome for which the program will run
+    :param low_memory: Whether to halve the memory usage by using 32 bit precision instead of 64
+    :return: Matrix of p-values
+    """
     scales = [(2 * (2 * (sigma0 * (2 ** (i / s)))) + 1) for i in range(s + 2)]
 
     dt = np.float32 if low_memory else np.float64
@@ -311,14 +341,28 @@ def DCI(f1,
 
 
 def sorted_indices(dci_out):
+    """
+    :param dci_out: Output of DCI method
+    :return: One array for X coordiantes and another for Y coordinates of sorted p-values.
+    """
     ind = np.unravel_index(np.argsort(dci_out, axis=None), dci_out.shape)
     return ind[0], ind[1]
 
 def toNearest(n,res):
+    """
+    :param n: Number
+    :param res: Resolution
+    :return: Number rounded up to the closest multiplicate of res
+    """
     if n % res == 0:
         return n
     return (n//res + 1) * res
 def isChr(s, c):
+    """
+    :param s: String
+    :param c: Chromosome, number or X or Y
+    :return: Whether s matches c
+    """
     if 'X' == c:
         return 'X' in c
     if 'Y' == c:
@@ -326,6 +370,12 @@ def isChr(s, c):
     return str(c) in re.findall("[1-9][0-9]*", s)
 
 def readHiCFile(f,chr, res):
+    """
+    :param f: .hic file path
+    :param chr: Which chromosome to read the file for
+    :param res: Resolution to extract information from
+    :return: Numpy matrix of contact counts
+    """
     result = straw.straw('KR', f, str(chr), str(chr), 'BP', res)
     x = np.array(result[0]) // res
     y = np.array(result[1]) // res
@@ -338,6 +388,13 @@ def readHiCFile(f,chr, res):
 
 
 def readBEDMAT(f,res, chr, bias):
+    """
+    :param f: Path for a .bed or .matrix file
+    :param res: Resolution of the files
+    :param chr: Which chromosome to extract information about
+    :param bias: Bias dictionary
+    :return: Numpy matrix of contact counts
+    """
     bed = f if ".bed" in f else f.replace("matrix", "bed")
     mat = f if ".matrix" in f else f.replace("bed", "matrix")
     if ".bed" != bed[-4:] or ".matrix" != mat[-7:]:
@@ -365,6 +422,10 @@ def readBEDMAT(f,res, chr, bias):
 
 
 def parseBP(s):
+    """
+    :param s: string
+    :return: string converted to number, taking account for kb or mb
+    """
     if not s:
         return False
     if s.isnumeric():
