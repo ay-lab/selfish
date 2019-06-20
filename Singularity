@@ -4,4 +4,4 @@ IncludeCmd: yes
 
 %post
 
-    echo "Hello selfish!"
+    echo "Selfish 1.2.0"
