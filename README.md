@@ -110,4 +110,5 @@ Bias file must not have a header.
 | ... | ... |
 
 ### Output
-Output of Selfish is a matrix of p-values indicating the probability of differential conformation (Smaller values mean more significant.). X and Y coordinates indicate the bin midpoints.
+Output of Selfish is a matrix of p-values indicating the probability of differential conformation (Smaller values mean more significant.). 
+X and Y coordinates indicate the bin midpoints.
