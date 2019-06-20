@@ -91,13 +91,13 @@ Midpoints must either be all divisible to resolution, or be already divided. (ie
 
 
 #### Bed-Matrix Combined files
-**User must provide a chromosome with the -ch argument.**
+**User must provide a chromosome with the -ch argument.**  
 .bed and .matrix files must have the same name other than the extension.
  Either file name can be provided as an input for selfish and the program will search for the second file automatically.
  
  
 #### HiC file
-**User must provide a chromosome with the -ch argument.**
+**User must provide a chromosome with the -ch argument.**  
 Selfish uses juicer's *straw* tool to read .hic files.
 
 #### Bias File
