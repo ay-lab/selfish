@@ -114,3 +114,8 @@ Bias file must not have a header.
 ### Output
 Output of Selfish is a matrix of p-values indicating the probability of differential conformation (Smaller values mean more significant.). 
 X and Y coordinates indicate the bin midpoints.
+File format of the output is a binary numpy file. It can be read by using Numpy as follows.  
+```python
+import numpy as np
+matrix = np.load("/path/to/output/selfish.npy")
+```

@@ -200,7 +200,8 @@ def DCI(f1,
     :param low_memory: Whether to halve the memory usage by using 32 bit precision instead of 64
     :return: Matrix of p-values
     """
-    scales = [(2 * (2 * (sigma0 * (2 ** (i / s)))) + 1) for i in range(s + 2)]
+    #scales = [(2 * (2 * (sigma0 * (2 ** (i / s)))) + 1) for i in range(s + 2)]
+    scales = [(sigma0 * (2 ** (i / s))) for i in range(1, s+3)]
 
     dt = np.float32 if low_memory else np.float64
 
