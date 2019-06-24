@@ -36,15 +36,15 @@ curl -s https://get.nextflow.io | bash
 #### With Docker
 ```bash
 ./nextflow run ay-lab/selfish --f1="/.../map1.txt" \
-                                  --f2="/.../map2.txt" \
-                                  --r=100kb -profile docker
+                              --f2="/.../map2.txt" \
+                              --r=100kb -profile docker
 ```
 
 #### With Singularity
 ```bash
 ./nextflow run ay-lab/selfish --f1="/.../map1.txt" \
-                                  --f2="/.../map2.txt" \
-                                  --r=100kb -profile singularity
+                              --f2="/.../map2.txt" \
+                              --r=100kb -profile singularity
 ```
 
 ### Bioconda
