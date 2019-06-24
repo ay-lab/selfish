@@ -16,7 +16,7 @@ selfish -f1 /.../map1.txt \
 ### Github
 Make sure you have Python 3 installed, along with all the dependencies listed.
 ```bash
-git clone https://github.com/tuvangezer/selfish
+git clone https://github.com/ay-lab/selfish
 ./selfish/selfish/selfish.py -f1 /.../map1.txt \
                              -f2 /.../map2.txt \
                              -r 100kb -o ./
@@ -24,7 +24,7 @@ git clone https://github.com/tuvangezer/selfish
 ### Nextflow
 If you have any problem regarding dependencies or version mismatches, we recommend using <a href="https://www.nextflow.io/" target="_blank">Nextflow</a> with a container technology like <a href="https://www.docker.com/get-started" target="_blank">Docker</a> or <a href="https://singularity.lbl.gov/" target="_blank">Singularity</a>. These methods require Nextflow(Can be installed with a single command that doesn't require special permissions.), and the desired container technology to be available.
 Program arguments are given to Nextflow with two dashes and the short format listed below.   
-**Updating:** If Nextflow warns that your project is outdated, use `nextflow pull tuvangezer/selfish` in order to update to latest version.
+**Updating:** If Nextflow warns that your project is outdated, use `nextflow pull ay-lab/selfish` in order to update to latest version.
 #### Install Nextflow
 Nextflow works for Linux and OS X. Install it using **one** of the commands listed below. **Requires Java 8+**
 ```bash
@@ -35,14 +35,14 @@ curl -s https://get.nextflow.io | bash
 
 #### With Docker
 ```bash
-./nextflow run tuvangezer/selfish --f1="/.../map1.txt" \
+./nextflow run ay-lab/selfish --f1="/.../map1.txt" \
                                   --f2="/.../map2.txt" \
                                   --r=100kb -profile docker
 ```
 
 #### With Singularity
 ```bash
-./nextflow run tuvangezer/selfish --f1="/.../map1.txt" \
+./nextflow run ay-lab/selfish --f1="/.../map1.txt" \
                                   --f2="/.../map2.txt" \
                                   --r=100kb -profile singularity
 ```
