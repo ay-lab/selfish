@@ -97,7 +97,7 @@ Midpoints must either be all divisible to resolution, or be already divided. (ie
 | ... | ... | ... |
 
 
-#### Bed-Matrix Combined files
+#### Bed-Matrix pairs (HiC-Pro format)
 **User must provide a chromosome with the -ch argument.**  
 .bed and .matrix files must have the same name other than the extension.
  Either file name can be provided as an input for selfish and the program will search for the second file automatically.
