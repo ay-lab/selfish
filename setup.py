@@ -29,6 +29,7 @@ setup(
         'pandas',
         'seaborn',
         'statsmodels',
+        'pathlib',
         'hic-straw'
     ],
     classifiers=(

@@ -8,10 +8,11 @@ paper: <a href="https://www.biorxiv.org/content/10.1101/540708v1?rss=1" target="
 ## Installation and usage
 ### PIP
 ```bash
-pip install selfish-hic
+pip3 install selfish-hic
 selfish -f1 /.../map1.txt \
         -f2 /.../map2.txt \
-        -r 100kb -o ./
+	-ch 2 \
+        -r 100kb -o ./output.npy
 ```
 ### Github
 Make sure you have Python 3 installed, along with all the dependencies listed.
@@ -19,7 +20,8 @@ Make sure you have Python 3 installed, along with all the dependencies listed.
 git clone https://github.com/ay-lab/selfish
 ./selfish/selfish/selfish.py -f1 /.../map1.txt \
                              -f2 /.../map2.txt \
-                             -r 100kb -o ./
+	                     -ch 2 \
+                             -r 100kb -o ./output.npy
 ```
 ### Nextflow
 If you have any problem regarding dependencies or version mismatches, we recommend using <a href="https://www.nextflow.io/" target="_blank">Nextflow</a> with a container technology like <a href="https://www.docker.com/get-started" target="_blank">Docker</a> or <a href="https://singularity.lbl.gov/" target="_blank">Singularity</a>. These methods require Nextflow(Can be installed with a single command that doesn't require special permissions.), and the desired container technology to be available.
@@ -37,6 +39,7 @@ curl -s https://get.nextflow.io | bash
 ```bash
 ./nextflow run ay-lab/selfish --f1="/.../map1.txt" \
                               --f2="/.../map2.txt" \
+	                      --ch 2 \
                               --r=100kb -profile docker
 ```
 
@@ -44,6 +47,7 @@ curl -s https://get.nextflow.io | bash
 ```bash
 ./nextflow run ay-lab/selfish --f1="/.../map1.txt" \
                               --f2="/.../map2.txt" \
+	                      --ch 2 \
                               --r=100kb -profile singularity
 ```
 
@@ -58,6 +62,7 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 5. scipy
 6. statsmodels
 7. hic-straw
+8. pathlib
 
 ## Parameters
 | Short | Long | Meaning |
@@ -66,9 +71,11 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | **-f1** | **--file1** | Location of contact map 1. (See below for format.) |
 | **-f2** | **--file2** | Location of contact map 2. (See below for format.) |
 | **-r** | **--resolution** | Resolution of the provided contact maps. |
-| **-o** | **--outdir** | Directory to save the output. |
+| **-o** | **--outfile** | Name of the output file. |
+| **-ch** | **--chromosome** | Specify which chromosome to run the program for. |
 | _Optional Parameters_ | | |
-| **-b** | **--biases** | Location of biases file. (See below for format.) |
+| **-b1** | **--biases1** | Location of biases file for contact map 1. (See below for format.) |
+| **-b2** | **--biases2** | Location of biases file for contact map 2. (See below for format.) |
 | **-sz** | **--sigmaZero** | Sigma0 parameter for Selfish. Default is experimentally chosen for 5Kb resolution.|
 | **-i** | **--iterations** | Iteration count parameter for Selfish. Default is experimentally chosen for 5Kb resolution.|
 | **-v** | **--verbose** | Whether the program prints its progress while running. Default is True. |
@@ -77,7 +84,7 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | **-V** | **--version** | Shows the version of the tool. |
 
 ### Input Formats
-SELFISH supports 3 different input formats. **Plain text**, **.hic**, **.bed/.matrix** combinations.
+SELFISH supports 3 different input formats. **Plain text**, **.hic**, **.bed/.matrix** pairs.
 #### Text Contact Maps
 Contact maps need to have the following format. They must not have a header. 
 Values must be separated by either a space, a tab, or a comma.
@@ -105,11 +112,11 @@ Bias file need to have the following format.
 Bias file must use the same midpoint format as the contact maps.
 Bias file must not have a header.
 
-| Midpoint | Bias |
-|---|---|
-| 5000 | 1.012 |
-| 65000 | 1.158 |
-| ... | ... |
+| Chromosome | Midpoint | Bias |
+|---|---|---|
+| chr1 | 5000 | 1.012 |
+| 1 | 65000 | 1.158 |
+| ... | ... | ... |
 
 ### Output
 Output of Selfish is a matrix of p-values indicating the probability of differential conformation (Smaller values mean more significant.). 

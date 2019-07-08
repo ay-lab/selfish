@@ -30,17 +30,26 @@ def parse_args(args):
     parser.add_argument("-f2", "--file2", dest="f2_path",
                         help="REQUIRED: Contact map 2", required=True)
 
-    parser.add_argument("-o", "--outdir", dest="outdir",
-                        help="REQUIRED: where the output files\
-                      will be written", required=True)
+    parser.add_argument("-o", "--outfile", dest="outdir",
+                        help="REQUIRED: Name of the output file.\
+                       Output is a numpy binary.", required=True)
+
+    parser.add_argument("-ch", "--chromosome", dest="chromosome",
+                        help="REQUIRED: Specify which chromosome to run the program for.",
+                        default='n', required=True)
 
     parser.add_argument("-r", "--resolution", dest="resolution",
                         help="REQUIRED: Resolution used for the contact maps"
                         , required=True)
 
-    parser.add_argument("-b", "--biases", dest="biasfile", \
+    parser.add_argument("-b1", "--biases1", dest="biasfile1", \
                         help="RECOMMENDED: biases calculated by\
-                        ICE or KR norm for each locus are read from BIASFILE", \
+                        ICE or KR norm for each locus for contact map 1 are read from BIASFILE", \
+                        required=False)
+
+    parser.add_argument("-b2", "--biases2", dest="biasfile2", \
+                        help="RECOMMENDED: biases calculated by\
+                        ICE or KR norm for each locus for contact map 2 are read from BIASFILE", \
                         required=False)
 
     parser.add_argument("-sz", "--sigmaZero", dest="s_z", type=float, default=1.6,
@@ -66,9 +75,6 @@ def parse_args(args):
     parser.add_argument("-lm", "--lowmem", dest="lowmemory",
                         help="OPTIONAL: Uses Float32 instead of Float64, halves the memory usage. Default is False",
                         default=False, required=False)
-    parser.add_argument("-ch", "--chromosome", dest="chromosome",
-                        help="REQUIRED for BED/Matrix input. Specify which chromosome to run the program for.",
-                        default=0, required=False)
 
     parser.add_argument("-V", "--version", action="version", version="Selfish {}".format(__version__) \
                         , help="Print version and exit")
@@ -156,7 +162,7 @@ def get_sep(f):
     raise FileNotFoundError
 
 
-def read_bias(f):
+def read_bias(f, chr):
     """
     :param f: Path to the bias file
     :return: Dictionary where keys are the bin coordinates and values are the bias value to multiply them with.
@@ -167,9 +173,10 @@ def read_bias(f):
         with open(f) as file:
             for line in file:
                 line = line.strip().split(sep)
-                val = float(line[1])
-                if not np.isnan(val):
-                    d[int(float(line[0]))] = val
+                if isChr(line[0], chr):
+                    val = float(line[2])
+                    if not np.isnan(val):
+                        d[int(float(line[1]))] = val
         return d
     else:
         return False
@@ -183,8 +190,9 @@ def DCI(f1,
         plot_results=False,
         verbose=True,
         distance_filter=5000000,
-        bias=False,
-        chromosome=0,
+        bias1=False,
+        bias2=False,
+        chromosome='n',
         low_memory=False):
     """
     :param f1: Path to contact map 1
@@ -195,7 +203,8 @@ def DCI(f1,
     :param plot_results: Boolean parameter to draw plots of the files
     :param verbose: Boolean parameter to make program print information during execution
     :param distance_filter: Distance where interactions that are further would be discarded
-    :param bias: Path to a bias file
+    :param bias1: Path to a bias file 1
+    :param bias2: Path to a bias file 2
     :param chromosome: Chromosome for which the program will run
     :param low_memory: Whether to halve the memory usage by using 32 bit precision instead of 64
     :return: Matrix of p-values
@@ -205,36 +214,37 @@ def DCI(f1,
 
     dt = np.float32 if low_memory else np.float64
 
-    biasDict = read_bias(bias)
+    biasDict1 = read_bias(bias1, chromosome)
+    biasDict2 = read_bias(bias2, chromosome)
 
     if type(f1) == str and type(f2) == str:
         if verbose: print("Reading Contact Map 1")
         if ("bed" in f1) or ("matrix" in f1):
-            if chromosome == 0:
+            if chromosome == 'n':
                 print("You need to specify a chromosome for matrix files.")
                 raise FileNotFoundError
-            a = readBEDMAT(f1, res, chromosome, bias)
+            a = readBEDMAT(f1, res, chromosome, biasDict1)
         elif ".hic" in f1:
-            if chromosome == 0:
+            if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             a = readHiCFile(f1, chromosome, res)
         else:
-            a = read_map_pd(f1, res, biasDict, dt)
+            a = read_map_pd(f1, res, biasDict1, dt)
 
         if verbose: print("Reading Contact Map 2")
         if ("bed" in f2) or ("matrix" in f2):
-            if chromosome == 0:
+            if chromosome == 'n':
                 print("You need to specify a chromosome for matrix files.")
                 raise FileNotFoundError
-            b = readBEDMAT(f2, res, chromosome, bias)
+            b = readBEDMAT(f2, res, chromosome, biasDict2)
         elif ".hic" in f2:
-            if chromosome == 0:
+            if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             b = readHiCFile(f1, chromosome, res)
         else:
-            b = read_map_pd(f2, res, biasDict, dt)
+            b = read_map_pd(f2, res, biasDict2, dt)
 
         f1 = f1.split('.')[0] if '.' in f1 else f1
         f2 = f2.split('.')[0] if '.' in f2 else f2
@@ -399,7 +409,7 @@ def readBEDMAT(f,res, chr, bias):
     bed = f if ".bed" in f else f.replace("matrix", "bed")
     mat = f if ".matrix" in f else f.replace("bed", "matrix")
     if ".bed" != bed[-4:] or ".matrix" != mat[-7:]:
-        print("Error: Couldn't find matrix-bed combinations. They must have same names, only difference being extension. (.bed, .matrix)")
+        print("Error: Couldn't find matrix-bed pair. They must have same names, only difference being extension. (.bed, .matrix)")
         raise FileNotFoundError
     d = {}
     with open(bed) as bf:
@@ -459,12 +469,21 @@ def main():
         print("Error: Invalid resolution")
         return
     distFilter = 0
-    biasf = False
-    if args.biasfile:
-        if os.path.exists(args.biasfile):
-            biasf = args.biasfile
+
+    biasf1 = False
+    if args.biasfile1:
+        if os.path.exists(args.biasfile1):
+            biasf1 = args.biasfile1
         else:
-            print("Error: Couldn't find specified bias file")
+            print("Error: Couldn't find specified bias1 file")
+            return
+
+    biasf2 = False
+    if args.biasfile2:
+        if os.path.exists(args.biasfile2):
+            biasf2 = args.biasfile2
+        else:
+            print("Error: Couldn't find specified bias2 file")
             return
 
     if args.distFilter:
@@ -477,11 +496,12 @@ def main():
             s=args.s, verbose=args.verbose,
             distance_filter=distFilter,
             plot_results=args.plot,
-            bias=biasf,
+            bias1=biasf1,
+            bias2=biasf2,
             low_memory=args.lowmemory,
             chromosome=args.chromosome)
 
-    np.save(str(pathlib.Path(args.outdir).joinpath("selfish.npy")), o)
+    np.save(args.outdir, o)
 
 
 def sizeof_fmt(num, suffix='B'):
