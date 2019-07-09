@@ -29,13 +29,13 @@ def parse_args(args):
                         "--file1",
                         dest="f1_path",
                         help="REQUIRED: Contact map 1",
-                        required=True)
+                        required=False)
 
     parser.add_argument("-f2",
                         "--file2",
                         dest="f2_path",
                         help="REQUIRED: Contact map 2",
-                        required=True)
+                        required=False)
 
     parser.add_argument("-o",
                         "--outfile",
@@ -57,6 +57,24 @@ def parse_args(args):
                         dest="resolution",
                         help="REQUIRED: Resolution used for the contact maps",
                         required=True)
+
+    parser.add_argument("-bed1", "--bed1", dest="bed1",
+                        help="BED file 1 for HiC-Pro type input",
+                        default="",
+                        required=False)
+    parser.add_argument("-bed2", "--bed2", dest="bed2",
+                        help="BED file 2 for HiC-Pro type input",
+                        default="",
+                        required=False)
+    parser.add_argument("-m1", "--matrix1", dest="mat1",
+                        help="MATRIX file 1 for HiC-Pro type input",
+                        default="",
+                        required=False)
+    parser.add_argument("-m2", "--matrix2", dest="mat2",
+                        help="MATRIX file 2 for HiC-Pro type input",
+                        default="",
+                        required=False)
+
 
     parser.add_argument("-b1", "--biases1", dest="biasfile1",
                         help="RECOMMENDED: biases calculated by\
@@ -123,7 +141,7 @@ def parse_args(args):
     return parser.parse_args()
 
 
-def read_map_pd(path, res, bias, dt):
+def read_map_pd(path, res, bias, dt, ch):
     """
     :param path: File path for the contact map
     :param res: Resolution of the contact map
@@ -134,18 +152,19 @@ def read_map_pd(path, res, bias, dt):
     sep = get_sep(path)
     o = pd.read_csv(path, sep=sep, header=None)
     o.dropna(inplace=True)
-    if np.all(np.mod(o[0], res) == 0):
-        o[0] //= res
-        o[1] //= res
-    n = max(max(o[0]), max(o[1])) + 1
+    o = o[np.vectorize(isChr)(o[0], ch)]
+    o = o[np.vectorize(isChr)(o[2], ch)]
+    o[1] //= res
+    o[3] //= res
+    n = max(max(o[1]), max(o[3])) + 1
     out = np.zeros((n, n), dtype=dt)
-    out[o[0], o[1]] = o[2]
-    out[o[1], o[0]] = o[2]
+    out[o[1], o[3]] = o[4]
+    out[o[3], o[1]] = o[4]
     if bias:
-        factors = np.vectorize(bias.get)(o[0], 1)
-        o[2] = np.multiply(o[2], factors)
         factors = np.vectorize(bias.get)(o[1], 1)
-        o[2] = np.multiply(o[2], factors)
+        o[4] = np.multiply(o[4], factors)
+        factors = np.vectorize(bias.get)(o[3], 1)
+        o[4] = np.multiply(o[4], factors)
 
     return np.triu(out)
 
@@ -203,7 +222,7 @@ def get_sep(f):
     raise FileNotFoundError
 
 
-def read_bias(f, chr):
+def read_bias(f, chr, res):
     """
     :param f: Path to the bias file
     :return: Dictionary where keys are the bin coordinates and values are the bias value to multiply them with.
@@ -217,13 +236,15 @@ def read_bias(f, chr):
                 if isChr(line[0], chr):
                     val = float(line[2])
                     if not np.isnan(val):
-                        d[int(float(line[1]))] = val
+                        d[float(line[1]) // res] = val
         return d
     return False
 
 
 def DCI(f1,
         f2,
+        bed1='',
+        bed2='',
         res=100000,
         sigma0=1.6,
         s=10,
@@ -249,42 +270,41 @@ def DCI(f1,
     :param low_memory: Whether to halve the memory usage by using 32 bit precision instead of 64
     :return: Matrix of p-values
     """
-    #scales = [(2 * (2 * (sigma0 * (2 ** (i / s)))) + 1) for i in range(s + 2)]
     scales = [(sigma0 * (2**(i / s))) for i in range(1, s + 3)]
 
     dt = np.float32 if low_memory else np.float64
 
-    biasDict1 = read_bias(bias1, chromosome)
-    biasDict2 = read_bias(bias2, chromosome)
+    biasDict1 = read_bias(bias1, chromosome, res)
+    biasDict2 = read_bias(bias2, chromosome, res)
 
     if type(f1) == str and type(f2) == str:
         if verbose: print("Reading Contact Map 1")
-        if ("bed" in f1) or ("matrix" in f1):
+        if bed1 != '' and f1 != '':
             if chromosome == 'n':
                 print("You need to specify a chromosome for matrix files.")
                 raise FileNotFoundError
-            a = readBEDMAT(f1, res, chromosome, biasDict1)
+            a = readBEDMAT(bed1, f1, res, chromosome, biasDict1)
         elif ".hic" in f1:
             if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             a = readHiCFile(f1, chromosome, res)
         else:
-            a = read_map_pd(f1, res, biasDict1, dt)
+            a = read_map_pd(f1, res, biasDict1, dt, chromosome)
 
         if verbose: print("Reading Contact Map 2")
-        if ("bed" in f2) or ("matrix" in f2):
+        if bed2 != '' and f2 != '':
             if chromosome == 'n':
                 print("You need to specify a chromosome for matrix files.")
                 raise FileNotFoundError
-            b = readBEDMAT(f2, res, chromosome, biasDict2)
+            b = readBEDMAT(bed2, f2, res, chromosome, biasDict2)
         elif ".hic" in f2:
             if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             b = readHiCFile(f1, chromosome, res)
         else:
-            b = read_map_pd(f2, res, biasDict2, dt)
+            b = read_map_pd(f2, res, biasDict2, dt, chromosome)
 
         f1 = f1.split('.')[0] if '.' in f1 else f1
         f2 = f2.split('.')[0] if '.' in f2 else f2
@@ -358,6 +378,7 @@ def DCI(f1,
     if verbose: print("Applying gaussians")
 
     final_p = np.ones(len(a[non_zero_indices]))
+
 
     size = a.shape[0]
     b -= a
@@ -446,7 +467,7 @@ def readHiCFile(f, chr, res):
     return o
 
 
-def readBEDMAT(f, res, chr, bias):
+def readBEDMAT(bed, mat, res, chr, bias):
     """
     :param f: Path for a .bed or .matrix file
     :param res: Resolution of the files
@@ -454,13 +475,6 @@ def readBEDMAT(f, res, chr, bias):
     :param bias: Bias dictionary
     :return: Numpy matrix of contact counts
     """
-    bed = f if ".bed" in f else f.replace("matrix", "bed")
-    mat = f if ".matrix" in f else f.replace("bed", "matrix")
-    if ".bed" != bed[-4:] or ".matrix" != mat[-7:]:
-        print(
-            "Error: Couldn't find matrix-bed pair. They must have same names, only difference being extension. (.bed, .matrix)"
-        )
-        raise FileNotFoundError
     d = {}
     with open(bed) as bf:
         for line in bf:
@@ -511,6 +525,11 @@ def main():
 
     f1 = args.f1_path
     f2 = args.f2_path
+    if args.bed1 and args.mat1:
+        f1 = args.mat1
+    if args.bed2 and args.mat2:
+        f2 = args.mat2
+
     if not (os.path.exists(f1) and os.path.exists(f2)):
         print("Error: Couldn't find specified contact files")
         return
@@ -544,6 +563,8 @@ def main():
 
     o = DCI(f1,
             f2,
+            bed1=args.bed1,
+            bed2=args.bed2,
             res=res,
             sigma0=args.s_z,
             s=args.s,

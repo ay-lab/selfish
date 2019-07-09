@@ -73,6 +73,10 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | **-r** | **--resolution** | Resolution of the provided contact maps. |
 | **-o** | **--outfile** | Name of the output file. |
 | **-ch** | **--chromosome** | Specify which chromosome to run the program for. |
+| **-m1** | **--matrix1** | Location of matrix file, **only** for HiC-Pro type input. |
+| **-m2** | **--matrix2** | Location of matrix file, **only** for HiC-Pro type input. |
+| **-bed1** | **--bed1** | Location of bed file, **only** for HiC-Pro type input. |
+| **-bed2** | **--bed2** | Location of bed file, **only** for HiC-Pro type input. |
 | _Optional Parameters_ | | |
 | **-b1** | **--biases1** | Location of biases file for contact map 1. (See below for format.) |
 | **-b2** | **--biases2** | Location of biases file for contact map 2. (See below for format.) |
@@ -84,17 +88,16 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | **-V** | **--version** | Shows the version of the tool. |
 
 ### Input Formats
-SELFISH supports 3 different input formats. **Plain text**, **.hic**, **.bed/.matrix** pairs.
+SELFISH supports 3 different input formats. **Plain text**, **.hic**, **.bed/.matrix** pairs(HiC-Pro format).
 #### Text Contact Maps
 Contact maps need to have the following format. They must not have a header. 
 Values must be separated by either a space, a tab, or a comma.
-Midpoints must either be all divisible to resolution, or be already divided. (ie. if the resolution is 5.000, midpoint can be 10 or 50.000)
 
-| Midpoint 1 | Midpoint 2 | Contact Count |
-|---|---|---|
-| 5000 | 65000 | 438 |
-| 5000 | 85000 | 12 |
-| ... | ... | ... |
+| Chromosome | Midpoint 1 | Chromosome | Midpoint 2 | Contact Count |
+|---|---|---|---|---|
+| chr1 | 5000 | chr1 | 65000 | 438 |
+| chr1 | 5000 | chr1 | 85000 | 12 |
+| ... | ... | ... | ... | ... |
 
 
 #### Bed-Matrix pairs (HiC-Pro format)
