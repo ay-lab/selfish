@@ -68,8 +68,8 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | Short | Long | Meaning |
 |---|---|---|
 |_Required Parameters_| | |
-| **-f1** | **--file1** | Location of contact map 1. (See below for format.) |
-| **-f2** | **--file2** | Location of contact map 2. (See below for format.) |
+| **-f1** | **--file1** | Location of contact map 1. (See below for format.) Not required for HiC-Pro input. |
+| **-f2** | **--file2** | Location of contact map 2. (See below for format.) Not required for HiC-Pro input. |
 | **-r** | **--resolution** | Resolution of the provided contact maps. |
 | **-o** | **--outfile** | Name of the output file. |
 | **-ch** | **--chromosome** | Specify which chromosome to run the program for. |
