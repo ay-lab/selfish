@@ -4,4 +4,4 @@ IncludeCmd: yes
 
 %post
 
-    echo "Selfish 1.5.1"
+    echo "Selfish 1.6.1"
