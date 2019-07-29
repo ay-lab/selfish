@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import os
-import pathlib
 import sys
 import re
 from collections import defaultdict
@@ -12,7 +11,6 @@ from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import straw
 import pandas as pd
-import seaborn as sns
 import statsmodels.stats.multitest as smm
 
 # Read the version file and get the value.
@@ -270,6 +268,8 @@ def DCI(f1,
     :param low_memory: Whether to halve the memory usage by using 32 bit precision instead of 64
     :return: Matrix of p-values
     """
+    if plot_results:
+        import seaborn as sns
     scales = [(sigma0 * (2**(i / s))) for i in range(1, s + 3)]
 
     dt = np.float32 if low_memory else np.float64

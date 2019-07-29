@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: tuvan/selfish:latest
+From: aylab/selfish:latest
 IncludeCmd: yes
 
 %post
