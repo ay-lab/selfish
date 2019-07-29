@@ -9,8 +9,8 @@ paper: <a href="https://www.biorxiv.org/content/10.1101/540708v1?rss=1" target="
 ### PIP
 ```bash
 pip3 install selfish-hic
-selfish -f1 /.../map1.txt \
-        -f2 /.../map2.txt \
+selfish -f1 /path/to/contact/map1.txt \
+        -f2 /path/to/contact/map2.txt \
 	-ch 2 \
         -r 100kb -o ./output.npy
 ```
@@ -18,8 +18,8 @@ selfish -f1 /.../map1.txt \
 Make sure you have Python 3 installed, along with all the dependencies listed.
 ```bash
 git clone https://github.com/ay-lab/selfish
-./selfish/selfish/selfish.py -f1 /.../map1.txt \
-                             -f2 /.../map2.txt \
+./selfish/selfish/selfish.py -f1 /path/to/contact/map1.txt \
+                             -f2 /path/to/contact/map2.txt \
 	                     -ch 2 \
                              -r 100kb -o ./output.npy
 ```
@@ -37,9 +37,9 @@ curl -s https://get.nextflow.io | bash
 
 #### With Docker
 ```bash
-./nextflow run ay-lab/selfish --f1="/.../map1.txt" \
-                              --f2="/.../map2.txt" \
-	                      --ch 2 \
+./nextflow run ay-lab/selfish --f1="/path/to/contact/map1.txt" \
+                              --f2="/path/to/contact/map2.txt" \
+	                      --ch=2 \
                               --r=100kb -profile docker
 ```
 
@@ -47,7 +47,7 @@ curl -s https://get.nextflow.io | bash
 ```bash
 ./nextflow run ay-lab/selfish --f1="/.../map1.txt" \
                               --f2="/.../map2.txt" \
-	                      --ch 2 \
+	                      --ch=2 \
                               --r=100kb -profile singularity
 ```
 
