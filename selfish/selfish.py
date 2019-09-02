@@ -10,6 +10,7 @@ from scipy.stats import norm
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import straw
+import cooler
 import pandas as pd
 import statsmodels.stats.multitest as smm
 
@@ -238,7 +239,6 @@ def read_bias(f, chr, res):
         return d
     return False
 
-
 def DCI(f1,
         f2,
         bed1='',
@@ -289,6 +289,10 @@ def DCI(f1,
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             a = readHiCFile(f1, chromosome, res)
+        elif f1.endswith('.cool'): #cooler.fileops.is_cooler(f1):
+            a = readCoolFile(f1, chromosome)
+        elif f1.endswith('.mcool'): #cooler.fileops.is_multires_file(f1):
+            a = readMultiCoolFile(f1, chromosome, res)
         else:
             a = read_map_pd(f1, res, biasDict1, dt, chromosome)
 
@@ -302,9 +306,13 @@ def DCI(f1,
             if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
-            b = readHiCFile(f1, chromosome, res)
+            b = readHiCFile(f2, chromosome, res)
+        elif f2.endswith('.cool'): #cooler.fileops.is_cooler(f1):
+            b = readCoolFile(f2, chromosome)
+        elif f2.endswith('.mcool'): #cooler.fileops.is_multires_file(f1):
+            b = readMultiCoolFile(f2, chromosome, res)
         else:
-            b = read_map_pd(f2, res, biasDict2, dt, chromosome)
+            b = read_map_pd(f2, res, biasDict1, dt, chromosome)
 
         f1 = f1.split('.')[0] if '.' in f1 else f1
         f2 = f2.split('.')[0] if '.' in f2 else f2
@@ -466,6 +474,29 @@ def readHiCFile(f, chr, res):
     o[y, x] = val
     return o
 
+def readCoolFile(f, chr):
+    """
+    :param f: .cool file path
+    :param chr: Which chromosome to read the file for
+    :return: Numpy matrix of contact counts
+    """
+    clr = cooler.Cooler(f)
+    result = clr.matrix(balance=True).fetch(chr)
+    result[np.isnan(result)] = 0
+    return result
+
+def readMultiCoolFile(f, chr, res):
+    """
+    :param f: .cool file path
+    :param chr: Which chromosome to read the file for
+    :param res: Resolution to extract information from
+    :return: Numpy matrix of contact counts
+    """
+    uri = '%s::/resolutions/%s' % (f, res)
+    clr = cooler.Cooler(uri)
+    result = clr.matrix(balance=True).fetch(chr)
+    result[np.isnan(result)] = 0
+    return result
 
 def readBEDMAT(bed, mat, res, chr, bias):
     """

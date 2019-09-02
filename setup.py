@@ -16,7 +16,7 @@ setup(
     entry_points = {
         "console_scripts": ['selfish = selfish.selfish:main']
         },
-    python_requires = '~=3.6',
+    python_requires = '>=3.5',
     author = 'Ferhat Ay',
     author_email = 'ferhatay@lji.org',
     license = 'MIT',
@@ -30,7 +30,8 @@ setup(
         'seaborn',
         'statsmodels',
         'pathlib',
-        'hic-straw'
+        'hic-straw',
+        'cooler'
     ],
     classifiers=(
         "Programming Language :: Python :: 3",
