@@ -312,7 +312,7 @@ def DCI(f1,
         elif f2.endswith('.mcool'): #cooler.fileops.is_multires_file(f1):
             b = readMultiCoolFile(f2, chromosome, res)
         else:
-            b = read_map_pd(f2, res, biasDict1, dt, chromosome)
+            b = read_map_pd(f2, res, biasDict2, dt, chromosome)
 
         f1 = f1.split('.')[0] if '.' in f1 else f1
         f2 = f2.split('.')[0] if '.' in f2 else f2
