@@ -1,9 +1,8 @@
 # SELFISH
-SELFISH (Discovery of Differential Chromatin Interactions via a Self-Similarity Measure) is a tool by Abbas Roayaei Ardakany, Ferhat Ay, and Stefano Lonardi. It is currently maintained by Tuvan Gezer (hgezer@lji.org).
-SELFISH is a tool for finding differential chromatin interactions
-between two Hi-C contact maps. It uses self-similarity to model interactions
-in a robust way. For more information read the full
-paper: <a href="https://www.biorxiv.org/content/10.1101/540708v1?rss=1" target="_blank">**Selfish: Discovery of Differential Chromatin Interactions via a Self-Similarity Measure**</a>.
+SELFISH (Discovery of Differential Chromatin Interactions via a Self-Similarity Measure) is a tool by Abbas Roayaei Ardakany, Ferhat Ay (ferhatay@lji.org), and Stefano Lonardi. This Python implementation is currently maintained by Tuvan Gezer (tgezer@sabanciuniv.edu). The original MATLAB implementation by Abbas (roayaei@gmail.com) can be found at https://github.com/roayaei/SELFISH. 
+
+SELFISH is a tool for finding differential chromatin interactions between two Hi-C contact maps. It uses self-similarity to model interactions in a robust way. For more information read the full
+paper: <a href="https://academic.oup.com/bioinformatics/article/35/14/i145/5529135"**Selfish: discovery of differential chromatin interactions via a self-similarity measure**</a>.
 ![DCI](/demo.png)
 ## Installation and usage
 ### PIP
