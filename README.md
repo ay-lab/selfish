@@ -77,6 +77,7 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | **-bed1** | **--bed1** | Location of bed file, **only** for HiC-Pro type input. |
 | **-bed2** | **--bed2** | Location of bed file, **only** for HiC-Pro type input. |
 | _Optional Parameters_ | | |
+| **-c** | **--changes** | Name of the output file that has the log fold changes between the inputs. |
 | **-b1** | **--biases1** | Location of biases file for contact map 1. (See below for format.) |
 | **-b2** | **--biases2** | Location of biases file for contact map 2. (See below for format.) |
 | **-sz** | **--sigmaZero** | Sigma0 parameter for Selfish. Default is experimentally chosen for 5Kb resolution.|
@@ -126,8 +127,9 @@ Bias file must not have a header.
 
 ### Output
 Output of Selfish is a matrix of p-values indicating the probability of differential conformation (Smaller values mean more significant.).
-X and Y coordinates indicate the bin midpoints.
-File format of the output is a binary numpy file. It can be read by using Numpy as follows.
+X and Y coordinates indicate the bin midpoints.     
+Another optional output is the log fold changes file. It is simply produced by `log2((map1 + 1) / (map2 + 1))`   
+File format of the outputs is a binary numpy file. It can be read by using Numpy as follows.
 ```python
 import numpy as np
 matrix = np.load("/path/to/output/selfish.npy")

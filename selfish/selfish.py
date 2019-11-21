@@ -43,6 +43,13 @@ def parse_args(args):
                        Output is a numpy binary.",
                         required=True)
 
+    parser.add_argument("-c",
+                        "--changefile",
+                        dest="changedir",
+                        help="Output file with the contact map fold changes",
+                        required=False,
+                        default="")
+
     parser.add_argument(
         "-ch",
         "--chromosome",
@@ -247,6 +254,7 @@ def DCI(f1,
         sigma0=1.6,
         s=10,
         plot_results=False,
+        changes="",
         verbose=True,
         distance_filter=5000000,
         bias1=False,
@@ -342,7 +350,7 @@ def DCI(f1,
     b = tmp.copy()
     tmp = None
 
-    non_zero_indices = np.logical_and(a != 0, b != 0)
+    non_zero_indices = np.logical_or(a != 0, b != 0)
 
     if plot_results:
         plt.clf()
@@ -386,6 +394,12 @@ def DCI(f1,
     if verbose: print("Applying gaussians")
 
     final_p = np.ones(len(a[non_zero_indices]))
+
+    if changes != "":
+        c_temp = np.zeros_like(a)
+        c_temp[non_zero_indices] = np.log2(np.divide(a + 1, b + 1))[non_zero_indices]
+        np.save(changes, c_temp)
+        c_temp = None
 
 
     size = a.shape[0]
@@ -604,6 +618,7 @@ def main():
             plot_results=args.plot,
             bias1=biasf1,
             bias2=biasf2,
+            changes=args.changedir,
             low_memory=args.lowmemory,
             chromosome=args.chromosome)
 
