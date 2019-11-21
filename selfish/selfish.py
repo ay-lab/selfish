@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import os
-import pathlib
 import sys
 import re
 from collections import defaultdict
@@ -11,8 +10,8 @@ from scipy.stats import norm
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import straw
+import cooler
 import pandas as pd
-import seaborn as sns
 import statsmodels.stats.multitest as smm
 
 # Read the version file and get the value.
@@ -240,7 +239,6 @@ def read_bias(f, chr, res):
         return d
     return False
 
-
 def DCI(f1,
         f2,
         bed1='',
@@ -270,6 +268,8 @@ def DCI(f1,
     :param low_memory: Whether to halve the memory usage by using 32 bit precision instead of 64
     :return: Matrix of p-values
     """
+    if plot_results:
+        import seaborn as sns
     scales = [(sigma0 * (2**(i / s))) for i in range(1, s + 3)]
 
     dt = np.float32 if low_memory else np.float64
@@ -289,6 +289,10 @@ def DCI(f1,
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             a = readHiCFile(f1, chromosome, res)
+        elif f1.endswith('.cool'): #cooler.fileops.is_cooler(f1):
+            a = readCoolFile(f1, chromosome)
+        elif f1.endswith('.mcool'): #cooler.fileops.is_multires_file(f1):
+            a = readMultiCoolFile(f1, chromosome, res)
         else:
             a = read_map_pd(f1, res, biasDict1, dt, chromosome)
 
@@ -302,7 +306,11 @@ def DCI(f1,
             if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
-            b = readHiCFile(f1, chromosome, res)
+            b = readHiCFile(f2, chromosome, res)
+        elif f2.endswith('.cool'): #cooler.fileops.is_cooler(f1):
+            b = readCoolFile(f2, chromosome)
+        elif f2.endswith('.mcool'): #cooler.fileops.is_multires_file(f1):
+            b = readMultiCoolFile(f2, chromosome, res)
         else:
             b = read_map_pd(f2, res, biasDict2, dt, chromosome)
 
@@ -466,6 +474,29 @@ def readHiCFile(f, chr, res):
     o[y, x] = val
     return o
 
+def readCoolFile(f, chr):
+    """
+    :param f: .cool file path
+    :param chr: Which chromosome to read the file for
+    :return: Numpy matrix of contact counts
+    """
+    clr = cooler.Cooler(f)
+    result = clr.matrix(balance=True).fetch(chr)
+    result[np.isnan(result)] = 0
+    return result
+
+def readMultiCoolFile(f, chr, res):
+    """
+    :param f: .cool file path
+    :param chr: Which chromosome to read the file for
+    :param res: Resolution to extract information from
+    :return: Numpy matrix of contact counts
+    """
+    uri = '%s::/resolutions/%s' % (f, res)
+    clr = cooler.Cooler(uri)
+    result = clr.matrix(balance=True).fetch(chr)
+    result[np.isnan(result)] = 0
+    return result
 
 def readBEDMAT(bed, mat, res, chr, bias):
     """

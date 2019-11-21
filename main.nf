@@ -1,8 +1,8 @@
 params.f1 = ""
 params.f2 = ""
 params.r = 0
-params.b1 = "none"
-params.b2 = "none"
+params.b1 = "none1"
+params.b2 = "none2"
 params.sz = 1.6
 params.i = 10
 params.d = ""
@@ -34,8 +34,8 @@ process run_selfish {
   stdout res
 
   script:
-  def b_arg1 = b_f1.name != "none" ? "-b1 $b_f1 " : ""
-  def b_arg2 = b_f2.name != "none" ? "-b2 $b_f2 " : ""
+  def b_arg1 = b_f1.name != "none1" ? "-b1 $b_f1 " : ""
+  def b_arg2 = b_f2.name != "none2" ? "-b2 $b_f2 " : ""
   """
     /selfish/selfish/selfish.py -f1 $cm1 -f2 $cm2 -o ./selfish.npy -r $params.r $b_arg1$b_arg2$ch_arg$sz_arg$i_arg$d_arg$v_arg$lm_arg
   """

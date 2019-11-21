@@ -1,7 +1,7 @@
 Bootstrap: docker
-From: tuvan/selfish:latest
+From: aylab/selfish:latest
 IncludeCmd: yes
 
 %post
 
-    echo "Selfish 1.5.1"
+    echo "Selfish 1.6.1"
