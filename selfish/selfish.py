@@ -368,12 +368,17 @@ def DCI(f1,
 
     # np.save("kr_a.dat",a)
     # np.save("kr_b.dat",b)
+    if changes != "":
+        c_temp = np.zeros_like(a)
+        c_temp[non_zero_indices] = np.log2(np.divide(a + 1, b + 1))[non_zero_indices]
+        np.save(changes, c_temp)
+        c_temp = None
 
     if verbose: print("Diagonal Normalizing Map 1")
-    normalize_map(a, a != 0)
+    normalize_map(a, non_zero_indices)
 
     if verbose: print("Diagonal Normalizing Map 2")
-    normalize_map(b, b != 0)
+    normalize_map(b, non_zero_indices)
     if plot_results:
         plt.clf()
         sns.heatmap(np.abs(a))
@@ -395,11 +400,6 @@ def DCI(f1,
 
     final_p = np.ones(len(a[non_zero_indices]))
 
-    if changes != "":
-        c_temp = np.zeros_like(a)
-        c_temp[non_zero_indices] = np.log2(np.divide(a + 1, b + 1))[non_zero_indices]
-        np.save(changes, c_temp)
-        c_temp = None
 
 
     size = a.shape[0]
