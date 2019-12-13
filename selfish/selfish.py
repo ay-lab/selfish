@@ -482,8 +482,8 @@ def readHiCFile(f, chr, res):
     x = np.array(result[0]) // res
     y = np.array(result[1]) // res
     val = np.array(result[2])
-    n = max(max(x), max(y))
-    o = np.zeros((n, n)) + 1
+    n = max(max(x), max(y)) + 1
+    o = np.zeros((n, n)) 
     o[x, y] = val
     o[y, x] = val
     return o
