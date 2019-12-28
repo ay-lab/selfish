@@ -185,7 +185,7 @@ def get_diags(map):
     for i in range(len(map)):
         diag = map.diagonal(i)
         diag = diag[diag != 0]
-        if len(diag) > 0:
+        if len(diag) > 0 and diag.shape[1] > 0:
             mean = np.mean(diag)
             std = np.std(diag) if np.std(diag) != 0 else 1
             means[i] = mean
@@ -203,12 +203,13 @@ def normalize_map(cmap, non_zero):
     :return: Changes matrix in place to have each diagonal sum = 0
     """
     means, stds = get_diags(cmap)
-    x, y = np.nonzero(non_zero)
+    x, y = np.nonzero(cmap)
     distance = np.abs(x - y)
     m = np.vectorize(means.get)(distance)
     s = np.vectorize(stds.get)(distance)
-    cmap[non_zero] -= m
-    cmap[non_zero] /= s
+    cmap[x,y] -= m
+    cmap[x,y] /= s
+    np.nan_to_num(cmap, copy=False)
 
 
 def get_sep(f):
