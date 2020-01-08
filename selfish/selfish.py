@@ -185,11 +185,17 @@ def get_diags(map):
     for i in range(len(map)):
         diag = map.diagonal(i)
         diag = diag[diag != 0]
-        if len(diag) > 0 and diag.shape[1] > 0:
+        if len(diag) > 0:
             mean = np.mean(diag)
             std = np.std(diag) if np.std(diag) != 0 else 1
-            means[i] = mean
-            stds[i] = std
+            if math.isnan(mean):
+                means[i] = 0
+            else:
+                means[i] = mean
+            if math.isnan(std):
+                stds[i] = 1
+            else:
+                stds[i] = std
         else:
             means[i] = 0
             stds[i] = 1
