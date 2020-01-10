@@ -203,7 +203,7 @@ def get_diags(map):
     return means, stds
 
 
-def normalize_map(cmap, non_zero):
+def normalize_map(cmap):
     """
     :param cmap: contact map
     :param non_zero: same size matrix with map that has True as value for indices to be normalized.
@@ -212,6 +212,13 @@ def normalize_map(cmap, non_zero):
     means, stds = get_diags(cmap)
     x, y = np.nonzero(cmap)
     distance = np.abs(x - y)
+    m = np.vectorize(means.get)(distance)
+    s = np.vectorize(stds.get)(distance)
+    cmap[x,y] -= m
+    cmap[x,y] /= s
+    
+    x, y = np.where(cmap==0)
+    distance = np.abs(x-y)
     m = np.vectorize(means.get)(distance)
     s = np.vectorize(stds.get)(distance)
     cmap[x,y] -= m
@@ -357,9 +364,9 @@ def DCI(f1,
     tmp[:b.shape[0], :b.shape[1]] = b
     b = tmp.copy()
     tmp = None
-
     non_zero_indices = np.logical_or(a != 0, b != 0)
-
+    #non_zero_indices1 = (a != 0)
+    #non_zero_indices2 = (b != 0)
     if plot_results:
         plt.clf()
         p_f = a.copy()
@@ -383,10 +390,14 @@ def DCI(f1,
         c_temp = None
 
     if verbose: print("Diagonal Normalizing Map 1")
-    normalize_map(a, non_zero_indices)
+    normalize_map(a)
 
     if verbose: print("Diagonal Normalizing Map 2")
-    normalize_map(b, non_zero_indices)
+    normalize_map(b)
+	# normalize the zero interactions using calculated means and sigmas for each contact map
+
+	
+	
     if plot_results:
         plt.clf()
         sns.heatmap(np.abs(a))
@@ -440,9 +451,16 @@ def DCI(f1,
     o[o == 0] = 1
     if plot_results:
         plt.clf()
-        sns.heatmap(np.abs(np.log10(o)))
+        o_temp = np.abs(np.log(o))
+        #params = norm.fit(d_diff[non_zero_indices])
+
+        o_temp[o_temp>10] = 10
+        o_temp[np.isinf(o_temp)] = 0 #log(0) = -inf
+        sns.heatmap(np.abs(o_temp))
+        #sns.heatmap(np.abs(np.log10(o_temp)))
         plt.title("Differential analysis")
         plt.savefig("f1f2_selfish.png")
+        o_temp = None
     return o
 
 
