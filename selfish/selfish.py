@@ -394,12 +394,11 @@ def DCI(f1,
 
     # np.save("kr_a.dat",a)
     # np.save("kr_b.dat",b)
+    changes_array = np.zeros_like(a)
+    changes_array[non_zero_indices] = np.log2(
+        np.divide(a + 1, b + 1))[non_zero_indices]
     if changes != "":
-        c_temp = np.zeros_like(a)
-        c_temp[non_zero_indices] = np.log2(
-            np.divide(a + 1, b + 1))[non_zero_indices]
-        np.save(changes, c_temp)
-        c_temp = None
+        np.save(changes, changes_array)
 
     if verbose:
         print("Diagonal Normalizing Map 1")
@@ -472,7 +471,7 @@ def DCI(f1,
         plt.title("Differential analysis")
         plt.savefig("f1f2_selfish.png")
         o_temp = None
-    return o
+    return o, changes_array
 
 
 def sorted_indices(dci_out):
@@ -653,27 +652,29 @@ def main():
     except:
         pass
 
-    o = DCI(f1,
-            f2,
-            bed1=args.bed1,
-            bed2=args.bed2,
-            res=res,
-            sigma0=args.s_z,
-            s=args.s,
-            verbose=args.verbose,
-            distance_filter=distFilter,
-            plot_results=args.plot,
-            bias1=biasf1,
-            bias2=biasf2,
-            changes=args.changedir,
-            low_memory=args.lowmemory,
-            chromosome=args.chromosome)
+    o, changes_array = DCI(f1,
+                           f2,
+                           bed1=args.bed1,
+                           bed2=args.bed2,
+                           res=res,
+                           sigma0=args.s_z,
+                           s=args.s,
+                           verbose=args.verbose,
+                           distance_filter=distFilter,
+                           plot_results=args.plot,
+                           bias1=biasf1,
+                           bias2=biasf2,
+                           changes=args.changedir,
+                           low_memory=args.lowmemory,
+                           chromosome=args.chromosome)
     if tsvout:
         indices = np.argwhere(o < tsvout)
         with open(args.outdir, 'w') as outfile:
+            outfile.write('LOC1\tLOC2\tP_VAL\tLOG_FOLD_CHANGE\n')
             for i in indices:
                 _x, _y = i[0], i[1]
-                outfile.write(f'{_x * res}\t{_y * res}\t{o[_x,_y]}\n')
+                outfile.write(
+                    f'{_x * res}\t{_y * res}\t{o[_x,_y]}\t{changes_array[_x,_y]}\n')
     else:
         np.save(args.outdir, o)
 
