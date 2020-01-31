@@ -59,6 +59,14 @@ def parse_args(args):
         default='n',
         required=True)
 
+    parser.add_argument(
+        "-t",
+        "--tsvout",
+        dest="tsvout",
+        help="Should the program output a tab-seperated output rather than the numpy array. Value must be the p-value cutoff (i.e. 0.05)",
+        default=0,
+        required=False)
+
     parser.add_argument("-r",
                         "--resolution",
                         dest="resolution",
@@ -81,7 +89,6 @@ def parse_args(args):
                         help="MATRIX file 2 for HiC-Pro type input",
                         default="",
                         required=False)
-
 
     parser.add_argument("-b1", "--biases1", dest="biasfile1",
                         help="RECOMMENDED: biases calculated by\
@@ -142,8 +149,8 @@ def parse_args(args):
         default=False,
         required=False)
 
-    parser.add_argument("-V", "--version", action="version", version="Selfish {}".format(__version__) \
-                        , help="Print version and exit")
+    parser.add_argument("-V", "--version", action="version",
+                        version="Selfish {}".format(__version__), help="Print version and exit")
 
     return parser.parse_args()
 
@@ -214,15 +221,15 @@ def normalize_map(cmap):
     distance = np.abs(x - y)
     m = np.vectorize(means.get)(distance)
     s = np.vectorize(stds.get)(distance)
-    cmap[x,y] -= m
-    cmap[x,y] /= s
-    
-    x, y = np.where(cmap==0)
+    cmap[x, y] -= m
+    cmap[x, y] /= s
+
+    x, y = np.where(cmap == 0)
     distance = np.abs(x-y)
     m = np.vectorize(means.get)(distance)
     s = np.vectorize(stds.get)(distance)
-    cmap[x,y] -= m
-    cmap[x,y] /= s
+    cmap[x, y] -= m
+    cmap[x, y] /= s
     np.nan_to_num(cmap, copy=False)
 
 
@@ -260,6 +267,7 @@ def read_bias(f, chr, res):
                         d[float(line[1]) // res] = val
         return d
     return False
+
 
 def DCI(f1,
         f2,
@@ -301,7 +309,8 @@ def DCI(f1,
     biasDict2 = read_bias(bias2, chromosome, res)
 
     if type(f1) == str and type(f2) == str:
-        if verbose: print("Reading Contact Map 1")
+        if verbose:
+            print("Reading Contact Map 1")
         if bed1 != '' and f1 != '':
             if chromosome == 'n':
                 print("You need to specify a chromosome for matrix files.")
@@ -312,14 +321,15 @@ def DCI(f1,
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             a = readHiCFile(f1, chromosome, res)
-        elif f1.endswith('.cool'): #cooler.fileops.is_cooler(f1):
+        elif f1.endswith('.cool'):  # cooler.fileops.is_cooler(f1):
             a = readCoolFile(f1, chromosome)
-        elif f1.endswith('.mcool'): #cooler.fileops.is_multires_file(f1):
+        elif f1.endswith('.mcool'):  # cooler.fileops.is_multires_file(f1):
             a = readMultiCoolFile(f1, chromosome, res)
         else:
             a = read_map_pd(f1, res, biasDict1, dt, chromosome)
 
-        if verbose: print("Reading Contact Map 2")
+        if verbose:
+            print("Reading Contact Map 2")
         if bed2 != '' and f2 != '':
             if chromosome == 'n':
                 print("You need to specify a chromosome for matrix files.")
@@ -330,9 +340,9 @@ def DCI(f1,
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             b = readHiCFile(f2, chromosome, res)
-        elif f2.endswith('.cool'): #cooler.fileops.is_cooler(f1):
+        elif f2.endswith('.cool'):  # cooler.fileops.is_cooler(f1):
             b = readCoolFile(f2, chromosome)
-        elif f2.endswith('.mcool'): #cooler.fileops.is_multires_file(f1):
+        elif f2.endswith('.mcool'):  # cooler.fileops.is_multires_file(f1):
             b = readMultiCoolFile(f2, chromosome, res)
         else:
             b = read_map_pd(f2, res, biasDict2, dt, chromosome)
@@ -351,7 +361,8 @@ def DCI(f1,
             "Error: inputs should either be file names or square numpy matrices"
         )
         return
-    if verbose: print("Applying distance filter")
+    if verbose:
+        print("Applying distance filter")
     if distance_filter > 0:
         a = np.tril(a, distance_filter // res)
         b = np.tril(b, distance_filter // res)
@@ -385,19 +396,20 @@ def DCI(f1,
     # np.save("kr_b.dat",b)
     if changes != "":
         c_temp = np.zeros_like(a)
-        c_temp[non_zero_indices] = np.log2(np.divide(a + 1, b + 1))[non_zero_indices]
+        c_temp[non_zero_indices] = np.log2(
+            np.divide(a + 1, b + 1))[non_zero_indices]
         np.save(changes, c_temp)
         c_temp = None
 
-    if verbose: print("Diagonal Normalizing Map 1")
+    if verbose:
+        print("Diagonal Normalizing Map 1")
     normalize_map(a)
 
-    if verbose: print("Diagonal Normalizing Map 2")
+    if verbose:
+        print("Diagonal Normalizing Map 2")
     normalize_map(b)
-	# normalize the zero interactions using calculated means and sigmas for each contact map
+    # normalize the zero interactions using calculated means and sigmas for each contact map
 
-	
-	
     if plot_results:
         plt.clf()
         sns.heatmap(np.abs(a))
@@ -415,11 +427,10 @@ def DCI(f1,
 
     # np.save("diag_a.dat",a)
     # np.save("diag_b.dat",b)
-    if verbose: print("Applying gaussians")
+    if verbose:
+        print("Applying gaussians")
 
     final_p = np.ones(len(a[non_zero_indices]))
-
-
 
     size = a.shape[0]
     b -= a
@@ -454,10 +465,10 @@ def DCI(f1,
         o_temp = np.abs(np.log(o))
         #params = norm.fit(d_diff[non_zero_indices])
 
-        o_temp[o_temp>10] = 10
-        o_temp[np.isinf(o_temp)] = 0 #log(0) = -inf
+        o_temp[o_temp > 10] = 10
+        o_temp[np.isinf(o_temp)] = 0  # log(0) = -inf
         sns.heatmap(np.abs(o_temp))
-        #sns.heatmap(np.abs(np.log10(o_temp)))
+        # sns.heatmap(np.abs(np.log10(o_temp)))
         plt.title("Differential analysis")
         plt.savefig("f1f2_selfish.png")
         o_temp = None
@@ -509,10 +520,11 @@ def readHiCFile(f, chr, res):
     y = np.array(result[1]) // res
     val = np.array(result[2])
     n = max(max(x), max(y)) + 1
-    o = np.zeros((n, n)) 
+    o = np.zeros((n, n))
     o[x, y] = val
     o[y, x] = val
     return o
+
 
 def readCoolFile(f, chr):
     """
@@ -524,6 +536,7 @@ def readCoolFile(f, chr):
     result = clr.matrix(balance=True).fetch(chr)
     result[np.isnan(result)] = 0
     return result
+
 
 def readMultiCoolFile(f, chr, res):
     """
@@ -537,6 +550,7 @@ def readMultiCoolFile(f, chr, res):
     result = clr.matrix(balance=True).fetch(chr)
     result[np.isnan(result)] = 0
     return result
+
 
 def readBEDMAT(bed, mat, res, chr, bias):
     """
@@ -632,6 +646,13 @@ def main():
             print("Error: Invalid distance filter")
             return
 
+    tsvout = False
+    try:
+        if args.tsvout != 0:
+            tsvout = float(args.tsvout)
+    except:
+        pass
+
     o = DCI(f1,
             f2,
             bed1=args.bed1,
@@ -647,8 +668,14 @@ def main():
             changes=args.changedir,
             low_memory=args.lowmemory,
             chromosome=args.chromosome)
-
-    np.save(args.outdir, o)
+    if tsvout:
+        indices = np.argwhere(o < tsvout)
+        with open(args.outdir, 'w') as outfile:
+            for i in indices:
+                _x, _y = i[0], i[1]
+                outfile.write(f'{_x * res}\t{_y * res}\t{o[_x,_y]}\n')
+    else:
+        np.save(args.outdir, o)
 
 
 def sizeof_fmt(num, suffix='B'):
