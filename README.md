@@ -161,5 +161,5 @@ File format of the outputs is a binary numpy file. It can be read by using Numpy
 import numpy as np
 matrix = np.load("/path/to/output/selfish.npy")
 ```
-### Citation
+## Citation
 If you use Selfish in your work, please cite https://academic.oup.com/bioinformatics/article/35/14/i145/5529135
