@@ -162,4 +162,6 @@ import numpy as np
 matrix = np.load("/path/to/output/selfish.npy")
 ```
 ## Citation
-If you use Selfish in your work, please cite our <a href="https://academic.oup.com/bioinformatics/article/35/14/i145/5529135">Bionformatics paper</a>. 
+If you use Selfish in your work, please cite our <a href="https://academic.oup.com/bioinformatics/article/35/14/i145/5529135">Bionformatics paper</a>:
+
+Abbas Roayaei Ardakany, Ferhat Ay, Stefano Lonardi, Selfish: discovery of differential chromatin interactions via a self-similarity measure, Bioinformatics, Volume 35, Issue 14, July 2019, Pages i145–i153, https://doi.org/10.1093/bioinformatics/btz362 
