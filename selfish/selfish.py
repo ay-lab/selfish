@@ -58,6 +58,13 @@ def parse_args(args):
         help="REQUIRED: Specify which chromosome to run the program for.",
         default='n',
         required=True)
+    parser.add_argument(
+        "-ch2",
+        "--chromosome2",
+        dest="chromosome2",
+        help="Optional: Specify the second chromosome for interchromosomal analysis.",
+        default='n',
+        required=False)
 
     parser.add_argument(
         "-t",
@@ -176,9 +183,9 @@ def read_map_pd(path, res, bias, dt, ch):
     out[o[3], o[1]] = o[4]
     if bias:
         factors = np.vectorize(bias.get)(o[1], 1)
-        o[4] = np.multiply(o[4], factors)
+        o[4] = np.divide(o[4], factors)
         factors = np.vectorize(bias.get)(o[3], 1)
-        o[4] = np.multiply(o[4], factors)
+        o[4] = np.divide(o[4], factors)
 
     return np.triu(out)
 
@@ -233,6 +240,15 @@ def normalize_map(cmap):
     np.nan_to_num(cmap, copy=False)
 
 
+def inter_normalize_map(cmap):
+    vals = cmap[cmap > 0]
+    m = np.mean(vals)
+    s = np.std(vals)
+    cmap -= m
+    cmap /= s
+    np.nan_to_num(cmap, copy=False, nan=0, posinf=0, neginf=0)
+
+
 def get_sep(f):
     """
     :param f: file path
@@ -283,6 +299,7 @@ def DCI(f1,
         bias1=False,
         bias2=False,
         chromosome='n',
+        chromosome2=None,
         low_memory=False):
     """
     :param f1: Path to contact map 1
@@ -299,6 +316,14 @@ def DCI(f1,
     :param low_memory: Whether to halve the memory usage by using 32 bit precision instead of 64
     :return: Matrix of p-values
     """
+    if not chromosome2 or chromosome2 == 'n':
+        chromosome2 = chromosome
+
+    if (chromosome != chromosome2) and not ((('.hic' in f1) or ('.cool' in f1) or ('.mcool' in f1)) and (('.hic' in f2) or ('.cool' in f2) or ('.mcool' in f2))):
+        print(
+            "Interchromosomal analysis is only supported for .hic and .cool input formats.")
+        raise FileNotFoundError
+
     if plot_results:
         import seaborn as sns
     scales = [(sigma0 * (2**(i / s))) for i in range(1, s + 3)]
@@ -320,11 +345,12 @@ def DCI(f1,
             if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
-            a = readHiCFile(f1, chromosome, res)
+            a = readHiCFile(f1, chromosome, chromosome2,
+                            res, distance_filter // res)
         elif f1.endswith('.cool'):  # cooler.fileops.is_cooler(f1):
-            a = readCoolFile(f1, chromosome)
+            a = readCoolFile(f1, chromosome, chromosome2)
         elif f1.endswith('.mcool'):  # cooler.fileops.is_multires_file(f1):
-            a = readMultiCoolFile(f1, chromosome, res)
+            a = readMultiCoolFile(f1, chromosome, chromosome2, res)
         else:
             a = read_map_pd(f1, res, biasDict1, dt, chromosome)
 
@@ -339,11 +365,12 @@ def DCI(f1,
             if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
-            b = readHiCFile(f2, chromosome, res)
+            b = readHiCFile(f2, chromosome, chromosome2,
+                            res, distance_filter // res)
         elif f2.endswith('.cool'):  # cooler.fileops.is_cooler(f1):
-            b = readCoolFile(f2, chromosome)
+            b = readCoolFile(f2, chromosome, chromosome2)
         elif f2.endswith('.mcool'):  # cooler.fileops.is_multires_file(f1):
-            b = readMultiCoolFile(f2, chromosome, res)
+            b = readMultiCoolFile(f2, chromosome, chromosome2, res)
         else:
             b = read_map_pd(f2, res, biasDict2, dt, chromosome)
 
@@ -361,11 +388,13 @@ def DCI(f1,
             "Error: inputs should either be file names or square numpy matrices"
         )
         return
-    if verbose:
-        print("Applying distance filter")
-    if distance_filter > 0:
-        a = np.tril(a, distance_filter // res)
-        b = np.tril(b, distance_filter // res)
+
+    if chromosome == chromosome2:
+        if verbose:
+            print("Applying distance filter")
+        if distance_filter > 0:
+            a = np.tril(a, distance_filter // res)
+            b = np.tril(b, distance_filter // res)
 
     tmp_n = max(max(a.shape), max(b.shape))
     tmp = np.zeros((tmp_n, tmp_n))
@@ -400,13 +429,20 @@ def DCI(f1,
     if changes != "":
         np.save(changes, changes_array)
 
-    if verbose:
-        print("Diagonal Normalizing Map 1")
-    normalize_map(a)
-
-    if verbose:
-        print("Diagonal Normalizing Map 2")
-    normalize_map(b)
+    if chromosome == chromosome2:
+        if verbose:
+            print("Diagonal Normalizing Map 1")
+        normalize_map(a)
+        if verbose:
+            print("Diagonal Normalizing Map 2")
+        normalize_map(b)
+    else:
+        if verbose:
+            print("Normalizing Map 1")
+        inter_normalize_map(a)
+        if verbose:
+            print("Normalizing Map 2")
+        inter_normalize_map(b)
     # normalize the zero interactions using calculated means and sigmas for each contact map
 
     if plot_results:
@@ -436,6 +472,7 @@ def DCI(f1,
     #a = None
     diff = b.copy()
     #b = None
+    np.nan_to_num(diff, copy=False, posinf=0, neginf=0, nan=0)
     d_pre = gaussian_filter(diff, scales[0])
     count = 1
     for scale in scales[1:]:
@@ -446,6 +483,7 @@ def DCI(f1,
         p_vals = norm.cdf(d_diff[non_zero_indices],
                           loc=params[0],
                           scale=params[1])
+        np.nan_to_num(p_vals, copy=False, posinf=1, neginf=1, nan=1)
         p_vals[p_vals > 0.5] = 1 - p_vals[p_vals > 0.5]
         p_vals *= 2
         final_p[p_vals < final_p] = p_vals[p_vals < final_p]
@@ -507,14 +545,14 @@ def isChr(s, c):
     return str(c) in re.findall("[1-9][0-9]*", s)
 
 
-def readHiCFile(f, chr, res):
+def readHiCFile(f, chr, chr2, res, distance):
     """
     :param f: .hic file path
     :param chr: Which chromosome to read the file for
     :param res: Resolution to extract information from
     :return: Numpy matrix of contact counts
     """
-    result = straw.straw('KR', f, str(chr), str(chr), 'BP', res)
+    result = straw.straw('KR', f, str(chr), str(chr2), 'BP', res)
     x = np.array(result[0]) // res
     y = np.array(result[1]) // res
     val = np.array(result[2])
@@ -522,22 +560,26 @@ def readHiCFile(f, chr, res):
     o = np.zeros((n, n))
     o[x, y] = val
     o[y, x] = val
+    np.nan_to_num(o, copy=False, nan=0, posinf=0, neginf=0)
     return o
 
 
-def readCoolFile(f, chr):
+def readCoolFile(f, chr, chr2):
     """
     :param f: .cool file path
     :param chr: Which chromosome to read the file for
     :return: Numpy matrix of contact counts
     """
     clr = cooler.Cooler(f)
-    result = clr.matrix(balance=True).fetch(chr)
+    if chr == chr2:
+        result = clr.matrix(balance=True).fetch(chr)
+    else:
+        result = clr.matrix(balance=True).fetch(chr, chr2)
     result[np.isnan(result)] = 0
     return result
 
 
-def readMultiCoolFile(f, chr, res):
+def readMultiCoolFile(f, chr, chr2, res):
     """
     :param f: .cool file path
     :param chr: Which chromosome to read the file for
@@ -546,7 +588,10 @@ def readMultiCoolFile(f, chr, res):
     """
     uri = '%s::/resolutions/%s' % (f, res)
     clr = cooler.Cooler(uri)
-    result = clr.matrix(balance=True).fetch(chr)
+    if chr == chr2:
+        result = clr.matrix(balance=True).fetch(chr)
+    else:
+        result = clr.matrix(balance=True).fetch(chr, chr2)
     result[np.isnan(result)] = 0
     return result
 
@@ -573,8 +618,8 @@ def readBEDMAT(bed, mat, res, chr, bias):
             if int(l[0]) in d and int(l[1]) in d:
                 val = float(l[2])
                 if bias:
-                    val *= bias.get(int(l[1]), 1)
-                    val *= bias.get(int(l[0]), 1)
+                    val /= bias.get(int(l[1]), 1)
+                    val /= bias.get(int(l[0]), 1)
                 o[d[int(l[0])], d[int(l[1])]] = val
                 o[d[int(l[1])], d[int(l[0])]] = val
     return o
@@ -666,7 +711,8 @@ def main():
                            bias2=biasf2,
                            changes=args.changedir,
                            low_memory=args.lowmemory,
-                           chromosome=args.chromosome)
+                           chromosome=args.chromosome,
+                           chromosome2=args.chromosome2)
     if tsvout:
         indices = np.argwhere(o < tsvout)
         with open(args.outdir, 'w') as outfile:
