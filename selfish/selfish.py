@@ -187,6 +187,7 @@ def read_map_pd(path, res, bias, dt, ch):
         factors = np.vectorize(bias.get)(o[3], 1)
         o[4] = np.divide(o[4], factors)
 
+    np.nan_to_num(o, copy=False, nan=0, posinf=0, neginf=0)
     return np.triu(out)
 
 
@@ -281,6 +282,8 @@ def read_bias(f, chr, res):
                     val = float(line[2])
                     if not np.isnan(val):
                         d[float(line[1]) // res] = val
+                    else:
+                        d[float(line[1]) // res] = np.Inf
         return d
     return False
 
@@ -622,6 +625,7 @@ def readBEDMAT(bed, mat, res, chr, bias):
                     val /= bias.get(int(l[0]), 1)
                 o[d[int(l[0])], d[int(l[1])]] = val
                 o[d[int(l[1])], d[int(l[0])]] = val
+    np.nan_to_num(o, copy=False, nan=0, posinf=0, neginf=0)
     return o
 
 
