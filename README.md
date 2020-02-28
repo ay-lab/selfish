@@ -98,8 +98,8 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | _Optional Parameters_ |                  |                                                                                                                                                                                                                                                                    |
 | **-t**                | **--tsvout**     | If specified, outputs will be written as a TSV file. Specify the p-value threshold for which the results will be written to the file (i.e. -t 0.05)                                                                                                                |
 | **-c**                | **--changes**    | Name of the output file that has the log fold changes between the inputs.                                                                                                                                                                                          |
-| **-b1**               | **--biases1**    | Location of biases file for contact map 1. (See below for format.)                                                                                                                                                                                                 |
-| **-b2**               | **--biases2**    | Location of biases file for contact map 2. (See below for format.)                                                                                                                                                                                                 |
+| **-b1**               | **--biases1**    | Location of bias/normalization vector file for contact map 1. (See below for format.)                                                                                                                                                                                                 |
+| **-b2**               | **--biases2**    | Location of bias/normalization vector file for contact map 2. (See below for format.)                                                                                                                                                                                                 |
 | **-sz**               | **--sigmaZero**  | Sigma0 parameter for Selfish. Default is experimentally chosen for 5Kb resolution.                                                                                                                                                                                 |
 | **-i**                | **--iterations** | Iteration count parameter for Selfish. Default is experimentally chosen for 5Kb resolution.                                                                                                                                                                        |
 | **-v**                | **--verbose**    | Whether the program prints its progress while running. Default is True.                                                                                                                                                                                            |
@@ -138,7 +138,7 @@ Selfish uses juicer's _straw_ tool to read .hic files.
 **User must provide a chromosome with the -ch argument.**
 Selfish uses _cooler_ to read .cool files.
 
-#### Bias File
+#### Bias (normalization) File
 
 Bias file need to have the following format.
 Bias file must use the same midpoint format as the contact maps.
