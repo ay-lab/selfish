@@ -1,4 +1,4 @@
-# SELFISH
+# Selfish
 
 SELFISH (Discovery of Differential Chromatin Interactions via a Self-Similarity Measure) is a tool by Abbas Roayaei Ardakany, Ferhat Ay (ferhatay@lji.org), and Stefano Lonardi. This Python implementation is currently maintained by Tuvan Gezer (tgezer@sabanciuniv.edu). The original MATLAB implementation by Abbas (roayaei@gmail.com) can be found at https://github.com/ucrbioinfo/SELFISH.
 
