@@ -398,12 +398,19 @@ def DCI(f1,
         if distance_filter > 0:
             a = np.tril(a, distance_filter // res)
             b = np.tril(b, distance_filter // res)
+    
+    temp_x = max(a.shape[0],b.shape[0])
+    temp_y = max(a.shape[1],b.shape[1])
+	
+    if chromosome == chromosome2:
+	    temp_x = max(temp_x,temp_y)
+	    temp_y = temp_x
 
-    tmp_n = max(max(a.shape), max(b.shape))
-    tmp = np.zeros((tmp_n, tmp_n))
+    #tmp_n = max(max(a.shape), max(b.shape))
+    tmp = np.zeros((temp_x,temp_y))
     tmp[:a.shape[0], :a.shape[1]] = a
     a = tmp.copy()
-    tmp = np.zeros((tmp_n, tmp_n))
+    tmp = np.zeros((temp_x, temp_y))
     tmp[:b.shape[0], :b.shape[1]] = b
     b = tmp.copy()
     tmp = None
@@ -500,6 +507,7 @@ def DCI(f1,
 
     o[non_zero_indices] = out_p
     o[o == 0] = 1
+    o = o[:temp_x,:temp_y]
     if plot_results:
         plt.clf()
         o_temp = np.abs(np.log(o))
@@ -559,10 +567,12 @@ def readHiCFile(f, chr, chr2, res, distance):
     x = np.array(result[0]) // res
     y = np.array(result[1]) // res
     val = np.array(result[2])
-    n = max(max(x), max(y)) + 1
-    o = np.zeros((n, n))
+    #n = max(max(x), max(y)) + 1
+    n1 = max(x) + 1
+    n2 = max(y) + 1
+    o = np.zeros((n1, n2))
     o[x, y] = val
-    o[y, x] = val
+    #o[y, x] = val
     np.nan_to_num(o, copy=False, nan=0, posinf=0, neginf=0)
     return o
 
