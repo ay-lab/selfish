@@ -427,7 +427,7 @@ def DCI(f1,
         plt.clf()
         p_f = b.copy()
         p_f[p_f == 0] = 1
-        sns.heatmap(np.log(p_f))
+        sns.heatmap(np.log10(p_f))
         plt.title("Contact counts (KR normalised, log scale) " + f2)
         plt.savefig('f2_2_kr.png')
 
@@ -467,7 +467,7 @@ def DCI(f1,
 
         plt.clf()
         sns.heatmap(np.abs(np.abs(a) - np.abs(b)))
-        plt.title("Contact difference (Diagonal normalised")
+        plt.title("Contact difference (Diagonal normalised)")
         plt.savefig('f12_diff_diag.png')
 
     # np.save("diag_a.dat",a)
@@ -506,19 +506,20 @@ def DCI(f1,
     _, out_p = smm.multipletests(final_p, method='fdr_bh')[:2]
 
     o[non_zero_indices] = out_p
-    o[o == 0] = 1
+    thr = 10
+    o[o == 0] = 10**-1*thr
     o = o[:temp_x,:temp_y]
     if plot_results:
         plt.clf()
         o_temp = np.abs(np.log(o))
         #params = norm.fit(d_diff[non_zero_indices])
 
-        o_temp[o_temp > 10] = 10
-        o_temp[np.isinf(o_temp)] = 0  # log(0) = -inf
+        o_temp[o_temp > thr] = thr
+        o_temp[np.isinf(o_temp)] = thr  # log(0) = -inf
         sns.heatmap(np.abs(o_temp))
         # sns.heatmap(np.abs(np.log10(o_temp)))
         plt.title("Differential analysis")
-        plt.savefig("f1f2_selfish.png")
+        plt.savefig("f1f2_selfish.png",dpi=400)
         o_temp = None
     return o, changes_array
 
