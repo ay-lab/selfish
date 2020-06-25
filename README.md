@@ -96,7 +96,7 @@ Selfish uses some python packages to accomplish its mission. These are the packa
 | **-bed1**             | **--bed1**       | Location of bed file, **only** for HiC-Pro type input.                                                                                                                                                                                                             |
 | **-bed2**             | **--bed2**       | Location of bed file, **only** for HiC-Pro type input.                                                                                                                                                                                                             |
 | _Optional Parameters_ |                  |                                                                                                                                                                                                                                                                    |
-| **-t**                | **--tsvout**     | If specified, outputs will be written as a TSV file. Specify the p-value threshold for which the results will be written to the file (i.e. -t 0.05)                                                                                                                |
+| **-t**                | **--tsvout**     | If specified, outputs will be written as a TSV file. Specify the q-value threshold for which the results will be written to the file (i.e. -t 0.05)                                                                                                                |
 | **-d**                | **--distanceFilter**    | Maximum distance between interacting loci.                                                                                                                                                                                          |
 | **-c**                | **--changes**    | Name of the output file that has the log fold changes between the inputs.                                                                                                                                                                                          |
 | **-b1**               | **--biases1**    | Location of bias/normalization vector file for contact map 1. (See below for format.)                                                                                                                                                                                                 |
@@ -153,7 +153,7 @@ Bias file must not have a header.
 
 ### Output
 
-Output of Selfish is a matrix of p-values indicating the probability of differential conformation (Smaller values mean more significant.).
+Output of Selfish is a matrix of q-values indicating the probability of differential conformation (Smaller values mean more significant.).
 X and Y coordinates indicate the bin midpoints.  
 Another optional output is the log fold changes file. It is simply produced by `log2((map1 + 1) / (map2 + 1))`  
 File format of the outputs is a binary numpy file. It can be read by using Numpy as follows.
