@@ -731,7 +731,7 @@ def main():
     if tsvout:
         indices = np.argwhere(o < tsvout)
         with open(args.outdir, 'w') as outfile:
-            outfile.write('LOC1\tLOC2\tP_VAL\tLOG_FOLD_CHANGE\n')
+            outfile.write('LOC1\tLOC2\tQ_VAL\tLOG_FOLD_CHANGE\n')
             for i in indices:
                 _x, _y = i[0], i[1]
                 outfile.write(
