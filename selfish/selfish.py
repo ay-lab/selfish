@@ -140,7 +140,13 @@ def parse_args(args):
                         default=True,
                         help="OPTIONAL: Verbosity of the program",
                         required=False)
-
+    parser.add_argument("-mn",
+                        "--mutual",
+                        dest="mutual_nz",
+                        type=bool,
+                        default=False,
+                        help="OPTIONAL: Only report interactions that are non-zero in both contact maps.",
+                        required=False)
     parser.add_argument("-p",
                         "--plot",
                         dest="plot",
@@ -298,6 +304,7 @@ def DCI(f1,
         plot_results=False,
         changes="",
         verbose=True,
+        mutual_nz=False,
         distance_filter=5000000,
         bias1=False,
         bias2=False,
@@ -414,7 +421,10 @@ def DCI(f1,
     tmp[:b.shape[0], :b.shape[1]] = b
     b = tmp.copy()
     tmp = None
-    non_zero_indices = np.logical_or(a != 0, b != 0)
+    if mutual_nz:
+        non_zero_indices = np.logical_and(a != 0, b != 0)
+    else:
+        non_zero_indices = np.logical_or(a != 0, b != 0)
     #non_zero_indices1 = (a != 0)
     #non_zero_indices2 = (b != 0)
     if plot_results:
@@ -720,6 +730,7 @@ def main():
                            sigma0=args.s_z,
                            s=args.s,
                            verbose=args.verbose,
+                           mutual_nz=args.mutual_nz,
                            distance_filter=distFilter,
                            plot_results=args.plot,
                            bias1=biasf1,
