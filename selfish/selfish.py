@@ -140,13 +140,21 @@ def parse_args(args):
                         default=True,
                         help="OPTIONAL: Verbosity of the program",
                         required=False)
-    parser.add_argument("-mn",
-                        "--mutual",
-                        dest="mutual_nz",
-                        type=bool,
-                        default=False,
-                        help="OPTIONAL: Only report interactions that are non-zero in both contact maps.",
-                        required=False)
+#    parser.add_argument("-mn",
+#                        "--mutual",
+#                        dest="mutual_nz",
+#                        type=bool,
+#                        default=True,
+#                        help="OPTIONAL: Only report interactions that are non-zero in both contact maps.",
+#                        required=False)
+    parser.add_argument("-nm",
+                        '--no-mutual',
+                         dest='mutual_nz',
+                         action='store_false',
+                         required=False,
+                         help="OPTIONAL: Consider also interactions that are non-zero in one of the contact maps.")
+    parser.set_defaults(mutual_nz=True)
+
     parser.add_argument("-p",
                         "--plot",
                         dest="plot",
