@@ -246,12 +246,12 @@ def normalize_map(cmap):
     cmap[x, y] -= m
     cmap[x, y] /= s
 
-    x, y = np.where(cmap == 0)
-    distance = np.abs(x-y)
-    m = np.vectorize(means.get)(distance)
-    s = np.vectorize(stds.get)(distance)
-    cmap[x, y] -= m
-    cmap[x, y] /= s
+    #x, y = np.where(cmap == 0)
+    #distance = np.abs(x-y)
+    #m = np.vectorize(means.get)(distance)
+    #s = np.vectorize(stds.get)(distance)
+    #cmap[x, y] -= m
+    #cmap[x, y] /= s
     np.nan_to_num(cmap, copy=False)
 
 
@@ -334,8 +334,8 @@ def DCI(f1,
     :param low_memory: Whether to halve the memory usage by using 32 bit precision instead of 64
     :return: Matrix of p-values
     """
-    if not chromosome2 or chromosome2 == 'n':
-        chromosome2 = chromosome
+    #if not chromosome2 or chromosome2 == 'n':
+    #    chromosome2 = chromosome
 
     if (chromosome != chromosome2) and not ((('.hic' in f1) or ('.cool' in f1) or ('.mcool' in f1)) and (('.hic' in f2) or ('.cool' in f2) or ('.mcool' in f2))):
         print(
@@ -413,7 +413,11 @@ def DCI(f1,
         if distance_filter > 0:
             a = np.tril(a, distance_filter // res)
             b = np.tril(b, distance_filter // res)
-    
+    #print(a[400,410],a[410,400])
+    a = np.triu(a,1)
+    b = np.triu(b,1)
+    #print(a[400,410],a[410,400])
+ 
     temp_x = max(a.shape[0],b.shape[0])
     temp_y = max(a.shape[1],b.shape[1])
 	
@@ -429,6 +433,7 @@ def DCI(f1,
     tmp[:b.shape[0], :b.shape[1]] = b
     b = tmp.copy()
     tmp = None
+    
     if mutual_nz:
         non_zero_indices = np.logical_and(a != 0, b != 0)
     else:
@@ -450,7 +455,8 @@ def DCI(f1,
         plt.savefig('f2_2_kr.png')
 
     # np.save("kr_a.dat",a)
-    # np.save("kr_b.dat",b)
+    # np.save("kr_b.dat",b)    
+
     changes_array = np.zeros_like(a)
     changes_array[non_zero_indices] = np.log2(
         np.divide(a + 1, b + 1))[non_zero_indices]
@@ -504,7 +510,8 @@ def DCI(f1,
     d_pre = gaussian_filter(diff, scales[0])
     count = 1
     for scale in scales[1:]:
-        print("Gaussian:", count, "of", len(scales) - 1)
+        if verbose:
+            print("Gaussian:", count, "of", len(scales) - 1)
         d_post = gaussian_filter(diff, scale)
         d_diff = d_post - d_pre
         params = norm.fit(d_diff[non_zero_indices])
@@ -730,6 +737,9 @@ def main():
     except:
         pass
 
+    if not args.chromosome2 or args.chromosome2 == 'n':
+        args.chromosome2 = args.chromosome
+
     o, changes_array = DCI(f1,
                            f2,
                            bed1=args.bed1,
@@ -750,11 +760,11 @@ def main():
     if tsvout:
         indices = np.argwhere(o < tsvout)
         with open(args.outdir, 'w') as outfile:
-            outfile.write('LOC1\tLOC2\tQ_VAL\tLOG_FOLD_CHANGE\n')
+            outfile.write('CHR1\tLOC1_start\tLOC1_end\tCHR2\tLOC2_start\tLOC2_end\tQ_VAL\tLOG_FOLD_CHANGE\n')
             for i in indices:
                 _x, _y = i[0], i[1]
                 outfile.write(
-                    f'{_x * res}\t{_y * res}\t{o[_x,_y]}\t{changes_array[_x,_y]}\n')
+                    f'{args.chromosome}\t{_x * res}\t{_x * res + res}\t{args.chromosome2}\t{_y * res}\t{_y * res + res}\t{o[_x,_y]}\t{changes_array[_x,_y]}\n')
     else:
         np.save(args.outdir, o)
 
