@@ -50,6 +50,20 @@ def parse_args(args):
                         help="Output file with the contact map fold changes",
                         required=False,
                         default="")
+    parser.add_argument(
+                        "-st",
+                        "--sparsityThreshold",
+                        dest="st",
+                        type=float,                        
+                        help="OPTIONAL: Selfish filters out interactions in sparse areas. The default value is 0.7.",
+                        required=False)
+    parser.add_argument("-ns",
+                        '--no-sparsityCheck',
+                         dest='st',
+                         action='store_false',
+                         required=False,
+                         help="OPTIONAL: Do not apply any sparsity checking.")
+    parser.set_defaults(st=0.7)
 
     parser.add_argument(
         "-ch",
@@ -246,13 +260,13 @@ def normalize_map(cmap):
     cmap[x, y] -= m
     cmap[x, y] /= s
 
-    #x, y = np.where(cmap == 0)
-    #distance = np.abs(x-y)
-    #m = np.vectorize(means.get)(distance)
-    #s = np.vectorize(stds.get)(distance)
-    #cmap[x, y] -= m
-    #cmap[x, y] /= s
-    np.nan_to_num(cmap, copy=False)
+    x, y = np.where(cmap == 0)
+    distance = np.abs(x-y)
+    m = np.vectorize(means.get)(distance)
+    s = np.vectorize(stds.get)(distance)
+    cmap[x, y] -= m
+    cmap[x, y] /= s
+    np.nan_to_num(cmap, copy=False, posinf=0, neginf=0, nan=0)
 
 
 def inter_normalize_map(cmap):
@@ -318,6 +332,8 @@ def DCI(f1,
         bias2=False,
         chromosome='n',
         chromosome2=None,
+        tsvout=None,
+        st=False,
         low_memory=False):
     """
     :param f1: Path to contact map 1
@@ -413,18 +429,14 @@ def DCI(f1,
         if distance_filter > 0:
             a = np.tril(a, distance_filter // res)
             b = np.tril(b, distance_filter // res)
-    #print(a[400,410],a[410,400])
-    a = np.triu(a,1)
-    b = np.triu(b,1)
-    #print(a[400,410],a[410,400])
- 
+    
     temp_x = max(a.shape[0],b.shape[0])
     temp_y = max(a.shape[1],b.shape[1])
 	
     if chromosome == chromosome2:
 	    temp_x = max(temp_x,temp_y)
 	    temp_y = temp_x
-
+    
     #tmp_n = max(max(a.shape), max(b.shape))
     tmp = np.zeros((temp_x,temp_y))
     tmp[:a.shape[0], :a.shape[1]] = a
@@ -440,6 +452,7 @@ def DCI(f1,
         non_zero_indices = np.logical_or(a != 0, b != 0)
     #non_zero_indices1 = (a != 0)
     #non_zero_indices2 = (b != 0)
+       
     if plot_results:
         plt.clf()
         p_f = a.copy()
@@ -494,12 +507,18 @@ def DCI(f1,
         plt.title("Contact difference (Diagonal normalised)")
         plt.savefig('f12_diff_diag.png')
 
+    # assign zero to the first four diagonals
+    il = np.tril_indices(a.shape[0], 2)
+    a[il] = 0
+    il = np.tril_indices(b.shape[0], 2)
+    b[il] = 0
     # np.save("diag_a.dat",a)
     # np.save("diag_b.dat",b)
     if verbose:
         print("Applying gaussians")
 
     final_p = np.ones(len(a[non_zero_indices]))
+    final_scale = np.ones(len(a[non_zero_indices]))
 
     size = a.shape[0]
     b -= a
@@ -521,32 +540,66 @@ def DCI(f1,
         np.nan_to_num(p_vals, copy=False, posinf=1, neginf=1, nan=1)
         p_vals[p_vals > 0.5] = 1 - p_vals[p_vals > 0.5]
         p_vals *= 2
-        final_p[p_vals < final_p] = p_vals[p_vals < final_p]
+        final_scale[p_vals < final_p] = scale
+        final_p[p_vals < final_p] = p_vals[p_vals < final_p]        
         d_pre = d_post.copy()
         count += 1
 
     d_diff = None
-    o = np.ones(diff.shape, dtype=dt)
-    diff = None
     _, out_p = smm.multipletests(final_p, method='fdr_bh')[:2]
 
+    o = np.ones(diff.shape, dtype=dt)
     o[non_zero_indices] = out_p
-    thr = 10
-    o[o == 0] = 10**-1*thr
-    o = o[:temp_x,:temp_y]
-    if plot_results:
+    if plot_results:                               
+        thr = 10
+        o[o == 0] = 10**-1*thr
+        o = o[:temp_x,:temp_y]
+
         plt.clf()
-        o_temp = np.abs(np.log(o))
+        o = np.abs(np.log(o))
         #params = norm.fit(d_diff[non_zero_indices])
 
-        o_temp[o_temp > thr] = thr
-        o_temp[np.isinf(o_temp)] = thr  # log(0) = -inf
-        sns.heatmap(np.abs(o_temp))
-        # sns.heatmap(np.abs(np.log10(o_temp)))
+        o[o > thr] = thr
+        o[np.isinf(o)] = thr  # log(0) = -inf
+        sns.heatmap(np.abs(o))
+        # sns.heatmap(np.abs(np.log10(o)))
         plt.title("Differential analysis")
-        plt.savefig("f1f2_selfish.png",dpi=400)
-        o_temp = None
-    return o, changes_array
+        plt.savefig("f1f2_selfish.png",dpi=200)                    
+    
+    if st:         
+        index = o < tsvout
+        sig_2d_indices = np.argwhere(index)
+        q_val = o[index]
+        osc = np.zeros(o.shape, dtype=dt)
+        osc[non_zero_indices] = final_scale 
+        scale = osc[index]
+        changes_array = changes_array[index]
+        x = sig_2d_indices[:,0] #[x[0] for x in sig_2d_indices]
+        y = sig_2d_indices[:,1] #[x[1] for x in sig_2d_indices] 
+        print("number of differential interactions before sparsity check: ",len(x)) 
+        os = o < 1  #np.zeros(diff.shape, dtype=dt)   
+        #os[non_zero_indices] = 1                  
+        nonsparse = x != 0
+        #print(f"ns={nonsparse}")
+        for i in range(len(x)):
+            s = math.ceil(scale[i])
+            c1 = np.sum(os[x[i]-s:x[i]+s+1, y[i]-s:y[i]+s+1]) / \
+            ((2*s+1)**2)
+            s = 2*s
+            c2 = np.sum(os[x[i]-s:x[i]+s+1, y[i]-s:y[i]+s+1]) / \
+            ((2*s+1)**2)
+            if c1 < st or c2 < 0.6:
+                nonsparse[i] = False
+
+        x = x[nonsparse]
+        y = y[nonsparse]
+        q_val= q_val[nonsparse]
+        diff = None
+        print("number of differential interactions after sparsity check: ",len(x))
+        return _, x, y, q_val, changes_array
+ 
+    diff = None
+    return  o, _, _, _, changes_array
 
 
 def sorted_indices(dci_out):
@@ -740,7 +793,7 @@ def main():
     if not args.chromosome2 or args.chromosome2 == 'n':
         args.chromosome2 = args.chromosome
 
-    o, changes_array = DCI(f1,
+    o, x, y, q_val, changes_array = DCI(f1,
                            f2,
                            bed1=args.bed1,
                            bed2=args.bed2,
@@ -756,15 +809,30 @@ def main():
                            changes=args.changedir,
                            low_memory=args.lowmemory,
                            chromosome=args.chromosome,
-                           chromosome2=args.chromosome2)
+                           chromosome2=args.chromosome2,
+                           st=args.st,
+                           tsvout=tsvout)
+    
+
     if tsvout:
-        indices = np.argwhere(o < tsvout)
-        with open(args.outdir, 'w') as outfile:
-            outfile.write('CHR1\tLOC1_start\tLOC1_end\tCHR2\tLOC2_start\tLOC2_end\tQ_VAL\tLOG_FOLD_CHANGE\n')
-            for i in indices:
-                _x, _y = i[0], i[1]
-                outfile.write(
-                    f'{args.chromosome}\t{_x * res}\t{_x * res + res}\t{args.chromosome2}\t{_y * res}\t{_y * res + res}\t{o[_x,_y]}\t{changes_array[_x,_y]}\n')
+
+        if args.st:
+        #indices = np.argwhere(o < tsvout)
+        
+            with open(args.outdir, 'w') as outfile:
+                outfile.write('CHR1\tLOC1_start\tLOC1_end\tCHR2\tLOC2_start\tLOC2_end\tQ_VAL\tLOG_FOLD_CHANGE\n')
+                for i in range(len(x)):
+                    _x, _y = x[i], y[i]
+                    outfile.write(
+                        f'{args.chromosome}\t{_x * res}\t{_x * res + res}\t{args.chromosome2}\t{_y * res}\t{_y * res + res}\t{q_val[i]}\t{changes_array[i]}\n')
+        else:
+            indices = np.argwhere(o < tsvout)
+            with open(args.outdir, 'w') as outfile:
+                outfile.write('CHR1\tLOC1_start\tLOC1_end\tCHR2\tLOC2_start\tLOC2_end\tQ_VAL\tLOG_FOLD_CHANGE\n')
+                for i in indices:
+                    _x, _y = i[0], i[1]
+                    outfile.write(
+                        f'{args.chromosome}\t{_x * res}\t{_x * res + res}\t{args.chromosome2}\t{_y * res}\t{_y * res + res}\t{o[_x,_y]}\t{changes_array[_x,_y]}\n')
     else:
         np.save(args.outdir, o)
 
