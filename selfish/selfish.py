@@ -168,7 +168,12 @@ def parse_args(args):
                          required=False,
                          help="OPTIONAL: Consider also interactions that are non-zero in one of the contact maps.")
     parser.set_defaults(mutual_nz=True)
-
+    parser.add_argument("-nb",
+                        '--no-balance',
+                         dest='cooler_do_balance',
+                         action='store_false',
+                         required=False,
+                         help="OPTIONAL: Set if the cooler data was normalized prior to creating the .cool file.")
     parser.add_argument("-p",
                         "--plot",
                         dest="plot",
@@ -327,6 +332,7 @@ def DCI(f1,
         changes="",
         verbose=True,
         mutual_nz=True,
+        cooler_do_balance=True,
         distance_filter=5000000,
         bias1=False,
         bias2=False,
@@ -382,9 +388,9 @@ def DCI(f1,
             a = readHiCFile(f1, chromosome, chromosome2,
                             res, distance_filter // res)
         elif f1.endswith('.cool'):  # cooler.fileops.is_cooler(f1):
-            a = readCoolFile(f1, chromosome, chromosome2)
+            a = readCoolFile(f1, chromosome, chromosome2, cooler_do_balance)
         elif f1.endswith('.mcool'):  # cooler.fileops.is_multires_file(f1):
-            a = readMultiCoolFile(f1, chromosome, chromosome2, res)
+            a = readMultiCoolFile(f1, chromosome, chromosome2, res, cooler_do_balance)
         else:
             a = read_map_pd(f1, res, biasDict1, dt, chromosome)
 
@@ -402,9 +408,9 @@ def DCI(f1,
             b = readHiCFile(f2, chromosome, chromosome2,
                             res, distance_filter // res)
         elif f2.endswith('.cool'):  # cooler.fileops.is_cooler(f1):
-            b = readCoolFile(f2, chromosome, chromosome2)
+            b = readCoolFile(f2, chromosome, chromosome2, cooler_do_balance)
         elif f2.endswith('.mcool'):  # cooler.fileops.is_multires_file(f1):
-            b = readMultiCoolFile(f2, chromosome, chromosome2, res)
+            b = readMultiCoolFile(f2, chromosome, chromosome2, res, cooler_do_balance)
         else:
             b = read_map_pd(f2, res, biasDict2, dt, chromosome)
 
@@ -656,7 +662,7 @@ def readHiCFile(f, chr, chr2, res, distance):
     return o
 
 
-def readCoolFile(f, chr, chr2):
+def readCoolFile(f, chr, chr2, cooler_do_balance):
     """
     :param f: .cool file path
     :param chr: Which chromosome to read the file for
@@ -664,14 +670,20 @@ def readCoolFile(f, chr, chr2):
     """
     clr = cooler.Cooler(f)
     if chr == chr2:
-        result = clr.matrix(balance=True).fetch(chr)
+        if cooler_do_balance:
+            result = clr.matrix(balance=True).fetch(chr)
+        else:
+            result = clr.matrix(balance=False).fetch(chr)
     else:
-        result = clr.matrix(balance=True).fetch(chr, chr2)
+        if cooler_do_balance:
+            result = clr.matrix(balance=True).fetch(chr, chr2)
+        else:
+            result = clr.matrix(balance=False).fetch(chr, chr2)
     result[np.isnan(result)] = 0
     return result
 
 
-def readMultiCoolFile(f, chr, chr2, res):
+def readMultiCoolFile(f, chr, chr2, res, cooler_do_balance):
     """
     :param f: .cool file path
     :param chr: Which chromosome to read the file for
@@ -681,9 +693,15 @@ def readMultiCoolFile(f, chr, chr2, res):
     uri = '%s::/resolutions/%s' % (f, res)
     clr = cooler.Cooler(uri)
     if chr == chr2:
-        result = clr.matrix(balance=True).fetch(chr)
+        if cooler_do_balance:
+            result = clr.matrix(balance=True).fetch(chr)
+        else:
+            result = clr.matrix(balance=False).fetch(chr)
     else:
-        result = clr.matrix(balance=True).fetch(chr, chr2)
+        if cooler_do_balance:
+            result = clr.matrix(balance=True).fetch(chr, chr2)
+        else:
+            result = clr.matrix(balance=False).fetch(chr)
     result[np.isnan(result)] = 0
     return result
 
@@ -802,6 +820,7 @@ def main():
                            s=args.s,
                            verbose=args.verbose,
                            mutual_nz=args.mutual_nz,
+                           cooler_do_balance=args.cooler_do_balance,
                            distance_filter=distFilter,
                            plot_results=args.plot,
                            bias1=biasf1,
