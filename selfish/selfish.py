@@ -64,7 +64,13 @@ def parse_args(args):
                          required=False,
                          help="OPTIONAL: Do not apply any sparsity checking.")
     parser.set_defaults(st=0.7)
-
+    parser.add_argument(
+        "-norm",
+        "--normalization",
+        default=False,
+        dest="norm_method",
+        help="RECOMMENDED: Normalization method (KR, VC,...).",
+        required=False)
     parser.add_argument(
         "-ch",
         "--chromosome",
@@ -168,12 +174,12 @@ def parse_args(args):
                          required=False,
                          help="OPTIONAL: Consider also interactions that are non-zero in one of the contact maps.")
     parser.set_defaults(mutual_nz=True)
-    parser.add_argument("-nb",
-                        '--no-balance',
-                         dest='cooler_do_balance',
-                         action='store_false',
-                         required=False,
-                         help="OPTIONAL: Set if the cooler data was normalized prior to creating the .cool file.")
+    #parser.add_argument("-nb",
+    #                    '--no-balance',
+    #                     dest='cooler_do_balance',
+    #                     action='store_false',
+    #                     required=False,
+    #                     help="OPTIONAL: Set if the cooler data was normalized prior to creating the .cool file.")
     parser.add_argument("-p",
                         "--plot",
                         dest="plot",
@@ -332,7 +338,7 @@ def DCI(f1,
         changes="",
         verbose=True,
         mutual_nz=True,
-        cooler_do_balance=True,
+        #cooler_do_balance=True,
         distance_filter=5000000,
         bias1=False,
         bias2=False,
@@ -340,7 +346,8 @@ def DCI(f1,
         chromosome2=None,
         tsvout=None,
         st=False,
-        low_memory=False):
+        low_memory=False,
+        norm_method= None):
     """
     :param f1: Path to contact map 1
     :param f2: Path to contact map 2
@@ -381,16 +388,16 @@ def DCI(f1,
                 print("You need to specify a chromosome for matrix files.")
                 raise FileNotFoundError
             a = readBEDMAT(bed1, f1, res, chromosome, biasDict1)
-        elif ".hic" in f1:
+        elif f1.endswith('.hic'):
             if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             a = readHiCFile(f1, chromosome, chromosome2,
-                            res, distance_filter // res)
+                            res, distance_filter // res, norm_method)
         elif f1.endswith('.cool'):  # cooler.fileops.is_cooler(f1):
-            a = readCoolFile(f1, chromosome, chromosome2, cooler_do_balance)
+            a = readCoolFile(f1, chromosome, chromosome2, norm_method)
         elif f1.endswith('.mcool'):  # cooler.fileops.is_multires_file(f1):
-            a = readMultiCoolFile(f1, chromosome, chromosome2, res, cooler_do_balance)
+            a = readMultiCoolFile(f1, chromosome, chromosome2, res, norm_method)
         else:
             a = read_map_pd(f1, res, biasDict1, dt, chromosome)
 
@@ -401,16 +408,16 @@ def DCI(f1,
                 print("You need to specify a chromosome for matrix files.")
                 raise FileNotFoundError
             b = readBEDMAT(bed2, f2, res, chromosome, biasDict2)
-        elif ".hic" in f2:
+        elif f2.endswith('.hic'):
             if chromosome == 'n':
                 print("You need to specify a chromosome for hic files.")
                 raise FileNotFoundError
             b = readHiCFile(f2, chromosome, chromosome2,
-                            res, distance_filter // res)
+                            res, distance_filter // res, norm_method)
         elif f2.endswith('.cool'):  # cooler.fileops.is_cooler(f1):
-            b = readCoolFile(f2, chromosome, chromosome2, cooler_do_balance)
+            b = readCoolFile(f2, chromosome, chromosome2, norm_method)
         elif f2.endswith('.mcool'):  # cooler.fileops.is_multires_file(f1):
-            b = readMultiCoolFile(f2, chromosome, chromosome2, res, cooler_do_balance)
+            b = readMultiCoolFile(f2, chromosome, chromosome2, res, norm_method)
         else:
             b = read_map_pd(f2, res, biasDict2, dt, chromosome)
 
@@ -641,14 +648,17 @@ def isChr(s, c):
     return str(c) in re.findall("[1-9][0-9]*", s)
 
 
-def readHiCFile(f, chr, chr2, res, distance):
+def readHiCFile(f, chr, chr2, res, distance, norm_method):
     """
     :param f: .hic file path
     :param chr: Which chromosome to read the file for
     :param res: Resolution to extract information from
     :return: Numpy matrix of contact counts
     """
-    result = straw.straw('KR', f, str(chr), str(chr2), 'BP', res)
+    if not norm_method:
+        result = straw.straw('KR', f, str(chr), str(chr2), 'BP', res)
+    else:
+        result = straw.straw(str(norm_method), f, str(chr), str(chr2), 'BP', res)
     x = np.array(result[0]) // res
     y = np.array(result[1]) // res
     val = np.array(result[2])
@@ -662,7 +672,7 @@ def readHiCFile(f, chr, chr2, res, distance):
     return o
 
 
-def readCoolFile(f, chr, chr2, cooler_do_balance):
+def readCoolFile(f, chr, chr2, norm_method):
     """
     :param f: .cool file path
     :param chr: Which chromosome to read the file for
@@ -670,20 +680,20 @@ def readCoolFile(f, chr, chr2, cooler_do_balance):
     """
     clr = cooler.Cooler(f)
     if chr == chr2:
-        if cooler_do_balance:
+        if not norm_method:
             result = clr.matrix(balance=True).fetch(chr)
         else:
-            result = clr.matrix(balance=False).fetch(chr)
+            result = clr.matrix(balance=norm_method).fetch(chr)
     else:
-        if cooler_do_balance:
+        if not norm_method:
             result = clr.matrix(balance=True).fetch(chr, chr2)
         else:
-            result = clr.matrix(balance=False).fetch(chr, chr2)
+            result = clr.matrix(balance=norm_method).fetch(chr, chr2)
     result[np.isnan(result)] = 0
     return result
 
 
-def readMultiCoolFile(f, chr, chr2, res, cooler_do_balance):
+def readMultiCoolFile(f, chr, chr2, res, norm_method):
     """
     :param f: .cool file path
     :param chr: Which chromosome to read the file for
@@ -693,15 +703,15 @@ def readMultiCoolFile(f, chr, chr2, res, cooler_do_balance):
     uri = '%s::/resolutions/%s' % (f, res)
     clr = cooler.Cooler(uri)
     if chr == chr2:
-        if cooler_do_balance:
+        if not norm_method:
             result = clr.matrix(balance=True).fetch(chr)
         else:
-            result = clr.matrix(balance=False).fetch(chr)
+            result = clr.matrix(balance=norm_method).fetch(chr)
     else:
-        if cooler_do_balance:
+        if not norm_method:
             result = clr.matrix(balance=True).fetch(chr, chr2)
         else:
-            result = clr.matrix(balance=False).fetch(chr)
+            result = clr.matrix(balance=norm_method).fetch(chr)
     result[np.isnan(result)] = 0
     return result
 
@@ -819,8 +829,7 @@ def main():
                            sigma0=args.s_z,
                            s=args.s,
                            verbose=args.verbose,
-                           mutual_nz=args.mutual_nz,
-                           cooler_do_balance=args.cooler_do_balance,
+                           mutual_nz=args.mutual_nz,                           
                            distance_filter=distFilter,
                            plot_results=args.plot,
                            bias1=biasf1,
@@ -829,6 +838,7 @@ def main():
                            low_memory=args.lowmemory,
                            chromosome=args.chromosome,
                            chromosome2=args.chromosome2,
+                           norm_method = args.norm_method,
                            st=args.st,
                            tsvout=tsvout)
     
