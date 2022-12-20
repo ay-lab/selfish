@@ -607,6 +607,7 @@ def DCI(f1,
         x = x[nonsparse]
         y = y[nonsparse]
         q_val= q_val[nonsparse]
+        changes_array = changes_array[nonsparse]
         diff = None
         print("number of differential interactions after sparsity check: ",len(x))
         return _, x, y, q_val, changes_array
