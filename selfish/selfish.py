@@ -10,7 +10,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
-import straw
+import hicstraw as straw
 import cooler
 import pandas as pd
 import statsmodels.stats.multitest as smm
